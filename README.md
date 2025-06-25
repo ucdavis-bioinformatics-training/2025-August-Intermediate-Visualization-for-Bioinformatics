@@ -21,7 +21,7 @@ The registration fee is $350 for UC students, postdocs, staff and faculty, $500 
 
 Who should attend? ... Prior course participants have included faculty, post docs, grad students, staff, and industry researchers.
 
-What are the prerequisites? ... You need to have introductory proficiency in R, meaning at least knowing the content that we teach in our introductory R workshop.
+What are the prerequisites? ... You need to have introductory proficiency in R, meaning at least being familiar with the content that we teach in our introductory R workshop.
 
 What do I need? ... You will need access to a computer with a recent version of R and Rstudio installed, as well as a reliable internet connection. If your department does not allow you to install software on your computer, please contact us ahead of time.
 
