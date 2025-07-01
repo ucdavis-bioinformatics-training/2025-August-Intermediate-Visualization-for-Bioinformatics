@@ -31,6 +31,9 @@ navigation:
   # - title: Challenge solutions
   #   url: R/challenge_solutions
 
+  - title: ggplot2 and scatterplots
+    url: R/01-scatterplot
+
   - heading: ETC
   - title: Closing thoughts
     url: base/closing
