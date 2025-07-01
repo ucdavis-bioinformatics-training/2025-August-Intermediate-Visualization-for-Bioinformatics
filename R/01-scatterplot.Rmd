@@ -16,15 +16,15 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 A scatter plot displays two values (x,y) from continuous scales for each point, and can be used any time you want to show the relationship between two continuous variables. Many popular bioinformatic visualizations are simply highly customized forms of scatter plot. The skills and tools covered in this chapter are generalizable to all scatter plots.
 
-# ```{r example_gallery, echo=FALSE}
-# library(htmlwidgets)
-# library(slickR)
-# # slickR object
-# example.gallery <- data.frame(name = c("Volcano plot", "QA/QC figure", "MDS plot", "Faceted UMAP plot"), img = c("volcano_example.png", "qc_example.png", "mds_example.png", "umap_example.png"))
-# slickR(obj = example.gallery$img, height = 300, width = "80%") %synch%
-#   slickR(obj = example.gallery$name, slideType = "p") +
-#   settings(dots = TRUE, autoplay = TRUE, autoplaySpeed = 1500)
-# ```
+```{r example_gallery, echo=FALSE}
+library(htmlwidgets)
+library(slickR)
+# slickR object
+example.gallery <- data.frame(name = c("Volcano plot", "QA/QC figure", "MDS plot", "Faceted UMAP plot"), img = c("volcano_example.png", "qc_example.png", "mds_example.png", "umap_example.png"))
+slickR(obj = example.gallery$img, height = 300, width = "80%") %synch%
+ slickR(obj = example.gallery$name, slideType = "p") +
+ settings(dots = TRUE, autoplay = TRUE, autoplaySpeed = 1500)
+```
 
 ### QA/QC figures
 
