@@ -423,7 +423,9 @@ ggplot(data = de, mapping = aes(x = AveExpr, y = adj.P.Val)) +
   labs(x = "Average Expression", y = "Adjusted P-Value")
 ```
 
-**A note on color.** Sometimes, convention dictates color choices for a plot. For example, red and blue on a volcano plot or a heat map, typically represent up- and down-regulation, respectively. A red / blue diverging color scheme often passes through white or near-white shades around zero, as darker shades of red and blue are employed at the ends of the spectrum. In the plot below, this creates a pale cloud of points that are difficult to distinguish against a light background, particularly if the point size or opacity is reduced.
+### A note on color
+
+Sometimes, convention dictates color choices for a plot. For example, red and blue on a volcano plot or a heat map, typically represent up- and down-regulation, respectively. A red / blue diverging color scheme often passes through white or near-white shades around zero, as darker shades of red and blue are employed at the ends of the spectrum. In the plot below, this creates a pale cloud of points that are difficult to distinguish against a light background, particularly if the point size or opacity is reduced.
 
 ```{r distiller}
 ggplot(data = de, mapping = aes(x = AveExpr, y = adj.P.Val)) +
