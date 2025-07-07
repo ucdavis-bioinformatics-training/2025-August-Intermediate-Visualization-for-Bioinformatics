@@ -524,7 +524,7 @@ de %>%
 ```
 
 
-x# Adjustments and annotations
+# Adjustments and annotations
 
 Imagine that you want to produce a Manhattan plot. There's a very straightforward library to produce these popular GWAS visualizations:
 
