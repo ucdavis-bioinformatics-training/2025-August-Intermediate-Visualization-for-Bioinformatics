@@ -524,6 +524,101 @@ de %>%
 ```
 
 
+x# Adjustments and annotations
+
+Imagine that you want to produce a Manhattan plot. There's a very straightforward library to produce these popular GWAS visualizations:
+
+```{r qqman}
+library(qqman)
+manhattan(gwasResults)
+```
+
+As an exercise in flexing our graphical skills, and to gain finer control over plot elements, we can recreate the Manhattan plot from this simulated data using ggplot2. After all, a Manhattan plot is essentially a very basic scatter plot that uses the same y-axis as our volcano plot example above, but genomic coordinates on the x-axis.
+
+Let's take a look at the GWAS data, which is a simulated output included with the qqman package for demonstration purposes.
+
+```{r gwas_data}
+gwasResults %>%
+  slice(1:50) %>%
+  kable() %>%
+  kable_styling("striped", fixed_thead = TRUE) %>%
+  scroll_box(height = "200px")
+```
+
+We can start building up the plot the same way we did for the volcano plot.
+```{r raw_manhattan}
+ggplot(data = gwasResults, mapping = aes(x = BP, y = P)) +
+  scale_y_continuous(transform = scales::new_transform(name = "neg.log.10", transform = function(x){-log10(x)}, inverse = function(x){1 / 10**x})) +
+  geom_hline(yintercept = c(5e-8, 1e-5), color = c("red", "blue")) +
+  geom_point(mapping = aes(color = as.factor(CHR))) +
+  scale_color_manual(values = rep(c("gray60", "gray20"), length(levels(as.factor(gwasResults$CHR)))/2)) +
+  guides(color = "none") +
+  labs(y = bquote(-log[10](P))) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())
+```
+
+Immediately, an issue becomes apparent; points for all of the chromosomes are plotted on the same coordinate system. We can attempt to resolve this with faceting.
+
+```{r gwas_facet}
+ggplot(data = gwasResults, mapping = aes(x = BP, y = P)) +
+  scale_y_continuous(transform = scales::new_transform(name = "neg.log.10", transform = function(x){-log10(x)}, inverse = function(x){1 / 10**x})) +
+  geom_point(mapping = aes(color = as.factor(CHR))) +
+  scale_color_manual(values = rep(c("gray60", "gray20"), length(levels(as.factor(gwasResults$CHR)))/2)) +
+  facet_grid(~ as.factor(CHR), switch = "x") +
+  guides(color = "none") +
+  labs(y = bquote(-log[10](P))) +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.spacing = unit(0, "lines"))
+```
+
+This is a bit more readable, but we have lost the horizontal rules that displayed significance thresholds, and there is unused white space between chromosomes on the x axis. Adjusting the data itself may be the easier approach.
+
+```{r offest}
+gwasResults.adjust <- gwasResults %>%
+  group_by(CHR) %>%
+  summarise("coord.min" = min(BP), "coord.max" = max(BP)) %>%
+  ungroup() %>%
+  mutate(offset = cumsum(coord.max) - coord.max - coord.min + 1)
+
+gwasResults.adjust <- left_join(gwasResults, gwasResults.adjust, by = "CHR") %>%
+  mutate(display.coord = BP + offset)
+
+gwasResults.anno <- filter(gwasResults.adjust, P < 5e-8)
+```
+
+The code above removes any "empty" space between chromosomes by subtracting the minimum coordinate for each chromosome from the running total of all previous chromosomes maximum coordinates.
+
+```{r custom_manhattan}
+ggplot(data = gwasResults.adjust, mapping = aes(x = display.coord, y = P)) +
+  geom_hline(yintercept = c(5e-8, 1e-5), color = c("red", "blue")) +
+  geom_point(mapping = aes(color = as.factor(CHR))) +
+  scale_color_manual(values = rep(c("gray60", "gray20"), 11)) +
+  guides(color = "none") +
+  geom_text_repel(data = gwasResults.anno, mapping = aes(label = SNP)) +
+  scale_y_continuous(transform = scales::new_transform(name = "neg.log.10", transform = function(x){-log10(x)}, inverse = function(x){1 / 10**x})) +
+  annotate(geom = "label", x = c(0,0), y = c(5e-8, 1e-5), label = c("5e-8", "1e-5"), color = c("red", "blue"), size = 2) +
+  labs(y = bquote(-log[10](P))) +
+  scale_x_continuous(breaks = tapply(gwasResults.adjust$display.coord, as.factor(gwasResults.adjust$CHR), median)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())
+```
+
+Now that our custom Manhattan plot is a ggplot object, we can add as much information as we like, modify axes and labels, plot background and gridlines, and so on. For most purposes, though, the default plot produced by qqman's `manhattan()` function is perfectly fine. However, it's always nice to know that you can recreate and customize a visualization as needed!
+
 # Prepare for the next section
 
 Before closing out this section, download the .Rmd for the next section: box plots, violin plots, and combining plots into multi-panel figures.
