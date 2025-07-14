@@ -1027,7 +1027,7 @@ data1 &lt;- read.table(file=&quot;https://github.com/ucdavis-bioinformatics-trai
 
 # To read a local file. If you have downloaded the raw_counts.txt file to your local machine, you may use the following command to read it in, by providing the full path for the file location. The way to specify the full path is the same as taught in the command line session.
 download.file(&quot;https://github.com/ucdavis-bioinformatics-training/courses/raw/master/Intro2R/raw_counts.txt&quot;, &quot;./raw_counts.txt&quot;)
-data1 &lt;- read.table(file=&quot;./raw_counts.txt&quot;, sep=&quot;\t&quot;, header=T)</code></pre>
+data1 &lt;- read.table(file=&quot;./raw_counts.txt&quot;, sep=&quot;\t&quot;, header=TRUE)</code></pre>
 <p>To check what type of object <em>data1</em> is in and take a look at
 the beginning part of the data.</p>
 <pre class="r colsel"><code>is.data.frame(data1)</code></pre>
