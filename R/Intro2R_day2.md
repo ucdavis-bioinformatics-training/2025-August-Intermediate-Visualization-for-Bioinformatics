@@ -1087,7 +1087,7 @@ head(data2)</code></pre>
 <h5>R base function write.table() can be used to export data to a
 file.</h5>
 <pre class="r colsel"><code># To write to a file called &quot;output.txt&quot; in your current working directory.
-write.table(data2[1:20,], file=&quot;output.txt&quot;, sep=&quot;\t&quot;, quote=F, row.names=T, col.names=T)</code></pre>
+write.table(data2[1:20,], file=&quot;output.txt&quot;, sep=&quot;\t&quot;, quote=FALSE, row.names=TRUE, col.names=TRUE)</code></pre>
 <p>It is also possible to export data to a csv file.</p>
 <p>write.csv()</p>
 <p>write.csv2()</p>
