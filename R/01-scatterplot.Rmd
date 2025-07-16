@@ -623,7 +623,7 @@ Now that our custom Manhattan plot is a ggplot object, we can add as much inform
 
 In this section, we learned many techniques to customize a ggplot2 plot, with a focus on the scatterplot. You can now make MDS, UMAP, volcano, dot, and Manhattan plots, among many others!
 
-```{r graph_gallery, echo=FALSE}
+```{r graph_gallery, echo=FALSE, eval=FALSE}
 library(cowplot)
 bottom.row <- plot_grid(t, r + guides(fill = "none", size = "none") + theme(axis.text.y = element_blank()))
 top.row <- plot_grid(p + theme(axis.title = element_blank()) + guides(color = "none"),

@@ -4555,8 +4555,6 @@ In this section, we learned many techniques to customize a ggplot2 plot,
 with a focus on the scatterplot. You can now make MDS, UMAP, volcano,
 dot, and Manhattan plots, among many others!
 
-![](01-scatterplot_files/figure-gfm/graph_gallery-1.png)<!-- -->
-
 Before closing out this section, download the .Rmd for the next section:
 box plots, violin plots, and combining plots into multi-panel figures.
 
@@ -4582,8 +4580,8 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] cowplot_1.2.0    qqman_0.1.9      ggrepel_0.9.6    ggplot2_3.5.2   
-    ## [5] kableExtra_1.4.0 magrittr_2.0.3   dplyr_1.1.4     
+    ## [1] qqman_0.1.9      ggrepel_0.9.6    ggplot2_3.5.2    kableExtra_1.4.0
+    ## [5] magrittr_2.0.3   dplyr_1.1.4     
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] gtable_0.3.6       compiler_4.5.1     tidyselect_1.2.1   Rcpp_1.1.0        
