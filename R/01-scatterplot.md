@@ -99,7 +99,7 @@ plot showing the relationship between P-value and log fold change.
 
 A ggplot2 object is built in layers, with each layer inheriting
 parameters from the previous elements. The parent plot is created by the
-`ggplot90` call, and subsequent layers are added with “geoms.” Here, we
+`ggplot()` call, and subsequent layers are added with “geoms.” Here, we
 have applied `geom_point()`, which creates scatter plots.
 
 ``` r
