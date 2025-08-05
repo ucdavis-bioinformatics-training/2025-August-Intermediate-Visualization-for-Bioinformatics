@@ -10,19 +10,11 @@ navigation:
   - title: Introduction to the Workshop and the Core
     url: base/welcome
 
-   - heading: Course Materials 
-   - title: Introduction to ggplot2 and box plots 
-     url: R/01-boxplot
-  # - title: Introduction to R Day 2
-  #   url: R/Intro2R_day2
-  # - title: Introduction to R Day 3
-  #   url: R/Intro2R_day3
-
-  # - title: Challenge solutions
-  #   url: R/challenge_solutions
-
-  - title: ggplot2 and scatterplots
-    url: R/01-scatterplot
+  - heading: Course Materials 
+  - title: Introduction to ggplot2 and box plots 
+  - url: R/01-boxplot
+ # - title: Challenge solutions
+ #   url: R/challenge_solutions
 
   - heading: ETC
   - title: Github page
