@@ -1,0 +1,564 @@
+---
+title: 'Visualizations in R: box and violin plots'
+author: "UC Davis Bioinformatics Core"
+date: "`r Sys.Date()`"
+always_allow_html: true
+output:
+  md_document:
+    variant: gfm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+# Introduction to box and violin plots
+
+Box plots and their cousins, violin plots, are some of the simplest visualizations. These plots are a means of visualizing the distribution of a single continuous variable. Box and violin plots can be split to compare distributions between groups.
+
+## Box plot
+
+The rectangular box that gives a box plot its name is drawn around the interquartile range (IQR) of the distribution, with a line marking the median, and whiskers extending to 1.5 times the IQR on either side. Outliers may be indicated with points.
+
+## Violin plot
+
+Instead of quantile markings, violin plot has variable width designed to help the reader perceive the density of data.
+
+# Set-up
+
+In this chapter, we will begin with the fundamentals of assembling a box plot, and then layer on additional information using graphical attributes like color and annotation text, and modify plot elements to customize figure appearance and improve readability.
+
+## Packages
+
+We will be working extensively with ggplot2 over the course of this workshop. Part of the tidyverse ecosystem, ggplot2 is a comprehensive, flexible framework for producing highly customizable graphics of many types. We will also make use of dplyr, another tidyverse package, to clean and reshape data before plotting.
+
+```{r packages}
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(kableExtra)
+library(ggplot2)
+library(ggsignif)
+library(ggExtra)
+```
+
+## Data
+
+We'll use gene expression data from a single cell experiment for these plots. Typically this sort of data is stored in a complex structure which retains expression data and experiment metadata together in a single object. In this case, we will be using a Seurat object created in one of our single cell RNA-Seq workshops.
+
+```{r data}
+experiment.data <- readRDS("scRNA_workshop-05.rds")
+```
+
+This workshop does not aim to give a comprehensive understanding of the Seurat workflow and object; the relevant data for the purposes of box and violin plots are the scaled counts and experiment metadata.
+
+Normalized expression data is stored in the "data" slot, and can be accessed as follows:
+
+```{r normalized.data, eval=FALSE}
+experiment.data@assays$RNA$data
+```
+
+The metadata is stored in another slot within this object.
+
+```{r metadata}
+experiment.data@meta.data %>%
+  slice(1:50) %>%
+  kable() %>%
+  kable_styling("striped", fixed_thead = TRUE) %>%
+  scroll_box(height = "200px")
+```
+
+Let's create a smaller data frame containing the expression information for a select number of markers and a few key metadata values for each sample.
+
+```{r markers}
+markers <- c("SATB2", "NXPE1", "PDE3A", "CFTR", "HNF1A-AS1", "ADAMTSL1", "AC073050.1", "PID1", "NEO1", "XIST", "NR5A2", "AC019330.1", "CNTN4", "CNTN3", "SPON1", "LEFTY1")
+
+markers <- markers[markers %in% rownames(experiment.data@assays$RNA$data)]
+
+sc.data <- as.data.frame(t(as.matrix(experiment.data@assays$RNA$data[markers,])))
+sc.data$cell <- rownames(sc.data)
+
+metadata <- experiment.data@meta.data
+metadata$cell <- rownames(metadata)
+metadata <- select(metadata, cell, subcluster, subcluster_ScType_filtered)
+
+sc.data <- inner_join(metadata, sc.data, by = "cell")
+
+slice(sc.data, 1:50) %>%
+  kable() %>%
+  kable_styling("striped", fixed_thead = TRUE) %>%
+  scroll_box(height = "200px")
+rm(experiment.data, metadata, markers)
+```
+
+
+# Basic plot
+
+A ggplot2 object is built in layers, with each layer inheriting parameters from the previous elements. The parent plot is created by the `ggplot()` call, and subsequent layers are added with "geoms." Here, we have applied `geom_boxplot()`, which creates box plots.
+
+The code below generates the most basic possible box plot with our data: distribution of normalized expression values for a single gene across all cells sampled.
+
+```{r basic_box}
+ggplot(data = sc.data, mapping = aes(y = SATB2)) +
+  geom_boxplot()
+```
+
+The box plot geom accepts a number of arguments that allow you to tune its appearance. Take a look at the help statement to get an idea of the options.
+
+```{r box_help, eval=FALSE}
+?geom_boxplot
+```
+
+The "notch" argument controls whether a notch will be drawn at the median. Two boxes with non-overlapping notches likely represent distributions with differing medians.
+
+```{r notch}
+ggplot(data = sc.data, mapping = aes(y = SATB2)) +
+  geom_boxplot(notch = TRUE)
+```
+
+The "outlier" arguments control the appearance of any points plotted outside of the box and whiskers.
+
+```{r outlier}
+ggplot(data = sc.data, mapping = aes(y = CNTN4)) +
+  geom_boxplot(notch = TRUE,
+               outliers = TRUE)
+```
+
+The computations underlying the box plot visualization are performed by `stat_boxplot()`. By default, the length of the whiskers is 1.5 times the interquartile range.
+
+```{r whisker}
+ggplot(data = sc.data, mapping = aes(y = CNTN4)) +
+  geom_boxplot(notch = TRUE,
+               coef = 2)
+```
+
+# Comparing distributions
+
+Our basic box plot is not as informative (or decorative) as it could be. Let's add information from the metadata.
+
+These cells have been grouped into clusters. The box plot can be split across the groups, allowing us to compare the distribution of expression values within each cell population.
+
+Providing a categorical variable to the x axis produces a series of box plots corresponding to the levels of the variable.
+
+
+```{r subcluster}
+ggplot(data = sc.data, mapping = aes(x = subcluster, y = SATB2)) +
+  geom_boxplot()
+```
+
+# Horizontal box plots
+
+Sometimes it may be advantageous to flip the coordinate system on its side so that the distribution stretches from left to right instead of vertically. This is accomplished with `coord_flip()`.
+
+```{r}
+ggplot(data = sc.data, mapping = aes(x = subcluster, y = SATB2)) +
+  geom_boxplot() +
+  coord_flip()
+```
+
+# Communicate additional information using graphical attributes
+
+While the coordinate space of a box plot communicates the values of up to two variables (one continuous and the optional second categorical), other visual qualities (*aesthetics* in ggplot) can be used to encode additional information, both categorical and continuous.
+
+Box plots have the following mappable aesthetics:
+
+- fill
+- alpha
+- color
+- shape
+- size
+- linetype
+- linewidth
+
+You can assign variables to any number of these aesthetics. **Some caveats apply.**
+
+*Shape*, and *size* apply to the outlier points. Shape is only suitable for categorical values, and cannot be used on very densely plotted points, where distinguishing shape becomes difficult. Meanwhile, size should be used with caution, as it implicitly communicates a sense of quantitative difference that is not appropriate for some qualitative measures (e.g. case vs control).
+
+*Color*, *linetype*, and *linewidth* apply to the whiskers and box outlines. Line-based attributes can be difficult to distinguish on box plots, the interpretation of which relies heavily on the area of the boxes.
+
+*Alpha*, which controls opacity, and *fill* apply to the box area. While alpha can be a difficult scale in which to visualize fine gradations of a continuous variable, fill is the most-used aesthetic for box and violin plots.
+
+**Fill** and **stroke** are only useful with a subset of available point shapes; explore [this documentation](https://www.sthda.com/english/wiki/ggplot2-point-shapes) to understand why.
+
+## Color fill by x-axis category
+
+You will often see filled box plots with fill colored using the same variable as is used for the x axis. This can be useful across multi-panel visualizations to tie together the same samples visualized on different axes (e.g. a dimensionality reduction biplot and a box plot may share a color scheme to aid comprehension).
+
+```{r subcluster_fill}
+ggplot(data = sc.data, mapping = aes(x = subcluster, y = SATB2, fill = subcluster)) +
+  geom_boxplot()
+```
+
+The default colors are notoriously difficult to distinguish for colorblind users. Many libraries offer palettes to extend the default color options, or you can set palettes manually.
+
+Now that we have code for a working box plot, we can store our plot object and add to it as we go.
+
+```{r save_plot}
+p <- ggplot(data = sc.data, mapping = aes(x = subcluster, y = SATB2, fill = subcluster)) + geom_boxplot()
+```
+
+### Built-in palettes: viridis
+
+[Viridis](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html) is one of many color palette resources. To access the viridis palettes seamlessly within ggplot2, we can call the `scale_fill_viridis_` family of functions: d for discrete data, b for binned data, and c for continuous data.
+
+```{r fill_viridis}
+p + scale_fill_viridis_d()
+```
+
+### Custom color palettes
+
+The simplest way to set custom colors for a ggplot object is with `scale_fill_manual()`. These colors are based on a selection of web accessible colors generated by [palette.es](https://palett.es/0074e6-eec1f1-b35e7e-534623-faa300). While the 5 color version generated by the site is relatively accessible, this expanded color palette is not.
+
+```{r fill_manual}
+custom.palette <- c("#0074e6", "#eec1f1", "#b35e7e", "#534623", "#faa300",
+                    "#194d80", "white", "#ff0062", "black", "#ffd380",
+                    "#80c0ff", "#f566ff", "#663648", "#b39b59", "#ffedcc",
+                    "#ffa6c8")
+p + scale_fill_manual(values = custom.palette)
+```
+
+## Color fill independent of x-axis
+
+When no value is supplied to x, the fill will be used to split the box plot.
+
+```{r subcluster_type}
+ggplot(data = sc.data, mapping = aes(y = SATB2, fill = subcluster_ScType_filtered)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "turbo", name = "Putative cell type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Coloring by putative cell reveals that cell type assignment was inconclusive for a large number of cells. Locating this box toward the center of our plot, and filling it with a bright color distracts from the differences in expression we observe between cells that were successfully assigned.
+
+To do this, we convert the character vector "subcluster_ScType_filtered" in our data frame to a factor, and set the levels to control the ordering. 
+
+```{r na_value}
+sc.data$putative <- factor(gsub("Unknown", NA, sc.data$subcluster_ScType_filtered),
+                           levels = c("Vascular endothelial cells",
+                                      "Lymphoid cells",
+                                      "Stromal cells",
+                                      "Tuft cells",
+                                      "Lymphatic endothelial cells",
+                                      "Intestinal epithelial cells"))
+ggplot(data = sc.data, mapping = aes(y = SATB2, fill = putative)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "turbo",
+                       name = "Putative cell type",
+                       begin = 0.1,
+                       end = 0.9,
+                       na.value = "gray90")
+```
+
+The fill scale function also offers the option of setting a shade for missing data. Here we have selected a low-contrast light gray color. With this gray color used for NA, a white background may be preferable. All graphical elements of a ggplot object are modifiable, and a number of pre-built *themes* exist. The default theme is `theme_gray()`.
+
+```{r theme_bw}
+ggplot(data = sc.data, mapping = aes(y = SATB2, fill = putative)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "turbo",
+                       name = "Putative cell type",
+                       begin = 0.1,
+                       end = 0.9,
+                       na.value = "gray90") +
+  theme_bw()
+```
+
+
+## Reshaping data for improved visualizations
+
+If more than one marker is of interest, we can display these on a shared set of axes by reshaping the data frame to put the expression values in the same column. Associated gene symbols are moved to another column, making the data frame much longer and narrower.
+
+```{r pivot}
+pivot_longer(sc.data, cols = SATB2:LEFTY1, names_to = "gene", values_to = "normalized.counts") %>%
+  slice(1:50) %>%
+  kable() %>%
+  kable_styling("striped", fixed_thead = TRUE) %>%
+  scroll_box(height = "200px")
+sc.pivot <- pivot_longer(sc.data, cols = SATB2:LEFTY1, names_to = "gene", values_to = "normalized.counts")
+```
+
+Reshaping the data frame this way allows us to use "gene" to set fill color, while the y-axis is relabled "normalized.counts."
+
+```{r fill_by_gene}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(x = subcluster, y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_bw()
+```
+
+Notice that the x-axis and fill are assigned independently, resulting in three boxes plotted for each sub-cluster.
+
+# Displaying multiple categorical variables
+
+If we want to examine the relationship between our three markers of interest from the previous figure split over each putative cell type, we can accomplish this one of three ways:
+
+- use putative cell type as x and gene as fill
+- use gene as fill and facet by putative cell type
+- create a facet grid using gene ~ putative cell type
+
+## Set fill and x independently
+
+As in the previous figure, we can simply set assign the fill and x aesthetics to different categorical values.
+
+```{r fill_and_x}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(x = putative, y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_bw()
+```
+
+Due to the long cell type names, the x-axis is unreadable. Let's change the angle of the text in order to prevent overlapping. The `theme()` function in ggplot2 allows access to the plot elements individually, allowing us to fine-tune the axis text appearance (among many other things!).
+
+```{r axis.text.x}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(x = putative, y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+We can also suppress the unecessary plot x-axis and legend titles.
+
+```{r axis.title.x}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(x = putative, y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x = element_blank(),
+        legend.title = element_blank())
+```
+
+The `labs()` function lets us specify labels, captions and titles for the plot.
+
+```{r labs}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(x = putative, y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  labs(y = "Normalized counts") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x = element_blank(),
+        legend.title = element_blank())
+```
+
+To change the axis tick labels, use `scale_x_discrete()`.
+
+```{r}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(x = putative, y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  labs(y = "Normalized counts") +
+  theme_bw() +
+  scale_x_discrete(labels = c(levels(sc.pivot$putative), "Unassigned")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x = element_blank(),
+        legend.title = element_blank())
+```
+## Facets
+
+Faceting creates multiple sub-plots, which allow us to visualize more levels of categorical variation without adding additional colors.
+
+### Fill by cell type and facet by gene
+
+```{r facet_wrap}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(y = normalized.counts, fill = putative)) +
+  geom_boxplot() +
+  facet_wrap(~gene) +
+  scale_fill_viridis_d(option = "turbo",
+                       name = "Putative cell type",
+                       begin = 0.1,
+                       end = 0.9,
+                       na.value = "gray90") +
+  theme_bw() +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title = element_blank())
+```
+
+When crafting your box plot, try to make the most important comparison easy for viewers. In this case, filling by gene and faceting by cell type may be more useful.
+
+### Fill by gene and facet by cell type
+
+```{r facet_wrap2}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  facet_wrap(~putative) +
+  scale_fill_viridis_d() +
+  theme_linedraw() +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title = element_blank())
+```
+
+### Create a gene by cell type grid
+
+If we wanted to examine the relationship between the sample identity, cell type, and gene expression, we can create a grid that allows us to view all three simultaneously.
+
+```{r facet_grid}
+sc.pivot$sample <- sapply(strsplit(sc.pivot$cell, split = "_", fixed = TRUE), "[[", 2L)
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(y = normalized.counts, fill = sample)) +
+  geom_boxplot() +                                                                
+  facet_grid(gene~putative) +
+  scale_fill_viridis_d(option = "mako") +
+  theme_classic() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = "Normalized counts")
+```
+
+# Subset the data
+
+If some comparisons are irrelevant, you can subset the data for the sake of clarity.
+
+```{r subset}
+filter(sc.pivot,
+       gene %in% c("PDE3A", "CFTR", "ADAMTSL1"),
+       putative %in% c("Intestinal epithelial cells", "Lymphatic endothelial cells", "Tuft cells")) %>%
+  ggplot(mapping = aes(x = putative, y = normalized.counts, fill = gene)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  labs(y = "Normalized counts") +
+  theme_linedraw() +
+  theme(axis.title.x = element_blank(),
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+# Annotations
+
+Box plots are, by their nature, fairly simple. Adding annotations to the box plot to highlight comparisons of interest or communicate additional information can make them more informative without becoming overly complex.
+
+One common annotation for box plots is the significance bracket. These are visual indicators of statistically significant differences between means. They may be marked with the p-value for the test, or with asterisks.
+
+It is possible to add significance annotations manually, but we will be using the library ggsignif.
+
+```{r gsignif}
+ggplot(data = sc.data, mapping = aes(x = putative, y = PDE3A, fill = putative)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "turbo",
+                       begin = 0.1,
+                       end = 0.9,
+                       na.value = "gray90") +
+  guides(fill = "none") +
+  geom_signif(comparisons = list(c("Tuft cells", "Intestinal epithelial cells"))) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+The significance test geom produced by ggsignif is compatible with coord_flip and faceting, but does require manual adjustment when categorical values on the x axis are broken up by the fill argument and position_dodge comes into play.
+
+```{r ggsignif_dodge}
+anno <- t.test(sc.data$PDE3A[sc.data$subcluster == "6"],
+               sc.data$PDE3A[sc.data$subcluster == "9"])
+filter(sc.data, putative %in% c("Tuft cells", "Lymphatic endothelial cells", "Intestinal epithelial cells")) %>%
+  ggplot(mapping = (aes(x = putative, y = PDE3A, fill = subcluster))) +
+  geom_boxplot() +
+  geom_signif(annotation = formatC(anno$p.value, digits = 1),
+              y_position = 5.75,
+              xmin = 3,
+              xmax = 3.25,
+              tip_length = c(0.05,0.2)) +
+  scale_fill_viridis_d(option = "plasma") +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(),
+        legend.title = element_blank())
+```
+
+# Marginal plots
+
+Box plots can also be useful in the context of annotating other types of plots. For example, in a densely plotted scatter plot, you may want marginal box plots to help readers accurately perceive the distribution of values on one or both axes. This can help you combat misleading over-plotting. The `ggMarginal()` function from ggExtra provides access to three types of marginal plots, including a box plot.
+
+```{r marginal}
+p <- filter(sc.data, putative %in% c("Intestinal epithelial cells", "Tuft cells", "Stromal cells")) %>%
+  ggplot(mapping = aes(x = ADAMTSL1, y = CFTR, color = putative, fill = putative)) +
+  geom_point() +
+  scale_color_manual(values = custom.palette[c(1,2,5)]) +
+  coord_fixed() +
+  theme_classic()
+ggMarginal(p + theme(legend.position = "bottom", legend.title = element_blank()), type = "boxplot", groupFill = TRUE)
+```
+
+# Violin plots
+
+Violin plots are very similar to box plots. In some cases, you can simply substitute `geom_violin()` in place of `geom_boxplot()`. However, be aware that violin plots require a mapping for the x aesthetic.
+
+```{r violin}
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(x = putative, y = normalized.counts, fill = gene)) +
+  geom_violin() +
+  scale_fill_viridis_d() +
+  labs(y = "Normalized counts") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x = element_blank(),
+        legend.title = element_blank())
+ggplot(data = sc.data, mapping = aes(x = putative, y = SATB2, fill = putative)) +
+  geom_violin() +
+  scale_fill_viridis_d(option = "turbo",
+                       begin = 0.1,
+                       end = 0.9,
+                       na.value = "gray90") +
+  guides(fill = "none") +
+  labs(x = "Putative cell type") +
+  coord_flip() +
+  theme_bw()
+filter(sc.pivot, gene %in% c("PDE3A", "CFTR", "ADAMTSL1")) %>%
+  ggplot(mapping = aes(y = normalized.counts, x = sample, fill = sample)) +
+  geom_violin() +                                                                
+  facet_grid(gene~putative) +
+  scale_fill_viridis_d(option = "mako") +
+  theme_classic() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = "Normalized counts")
+```
+
+Significance brackets are not common on violin plots, but if desired, it functions the same way as on a box plot.
+
+```{r violin_signif}
+ggplot(data = sc.data, mapping = aes(x = putative, y = PDE3A, fill = putative)) +
+  geom_violin() +
+  scale_fill_viridis_d(option = "turbo",
+                       begin = 0.1,
+                       end = 0.9,
+                       na.value = "gray90") +
+  guides(fill = "none") +
+  geom_signif(comparisons = list(c("Tuft cells", "Intestinal epithelial cells"))) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Occasionally, you will see a box plot superimposed on the violin forms. In this case, be sure to move the fill assignment inside the geom_violin() call so that the box plots remain unfilled (this makes them easier to perceive).
+
+```{r violin_box}
+ggplot(data = sc.data, mapping = aes(x = putative, y = PDE3A)) +
+  geom_violin(mapping = aes(fill = putative)) +
+  geom_boxplot(width = 0.1) +
+  scale_fill_viridis_d(option = "turbo",
+                       begin = 0.1,
+                       end = 0.9,
+                       na.value = "gray90") +
+  guides(fill = "none") +
+  geom_signif(comparisons = list(c("Tuft cells", "Intestinal epithelial cells"))) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+# Prepare for the next section
+
+```{r prepare_next}
+```
+

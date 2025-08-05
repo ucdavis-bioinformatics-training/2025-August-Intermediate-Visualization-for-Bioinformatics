@@ -41,7 +41,7 @@ In this chapter, we will begin with the fundamentals of assembling a scatter plo
 
 ## Packages
 
-We will be working extensively with ggplot2 over the course of this workshop. Part of the tidyverse ecosystem, ggplot2 is a comprehensive, flexible framework for producing highly customizable graphics of many types. We will also make use of dplyr, another tidyverse package, to clean and reshape data before plotting.
+Like the previous section, this section makes use of ggplot2 and tidyverse libraries. In addition, we will use ggrepel, which extends the ggplot geom_label functionality.
 
 ```{r packages}
 library(dplyr)
@@ -158,30 +158,6 @@ p <- ggplot(data = de, mapping = aes(x = logFC, y = -log10(P.Value))) +
   geom_point(mapping = aes(color = de.status))
 p
 ```
-
-To adjust the color, we can use one of two methods: built-in palettes, or manual palette creation.
-
-## Built-in palettes: Rcolorbrewer
-
-The `scale_color_brewer()` function maps selections from the [ColorBrewer](https://colorbrewer2.org/#type=qualitative&scheme=Dark2&n=6) resource onto the color aesthetic. These were designed for maps, but work in a wide variety of visualization types. The darker palettes tend to be more readable in scatter plots, unless a dark background is selected to make the most of a pastel color scheme.
-
-```{r scale_color_brewer}
-p + scale_color_brewer(name = "Significance",
-                       palette = "Dark2",
-                       breaks = c("sig.down", "not.sig", "sig.up"))
-```
-
-## Built-in palettes: viridis
-
-[Viridis](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html) is another color palette resource. To access the viridis palettes seamlessly within ggplot2, we can call the `scale_color_viridis_` family of functions: d for discrete data, b for binned data, and c for continuous data.
-
-```{r scale_color_viridis_d}
-p + scale_color_viridis_d(name = "Significance",
-                          option = "plasma",
-                          breaks = c("sig.down", "not.sig", "sig.up"))
-```
-
-Both viridis and ColorBrewer offer a selection of palettes designed to be readable to users with color vision deficiencies and in print. Feel free to explore, modifying the code to produce different appearances.
 
 ## Custom color palettes
 
@@ -633,7 +609,7 @@ top.row <- plot_grid(p + theme(axis.title = element_blank()) + guides(color = "n
 plot_grid(top.row, bottom.row, ncol = 1)
 ```
 
-Before closing out this section, download the .Rmd for the next section: box plots, violin plots, and combining plots into multi-panel figures.
+Before closing out this section, download the .Rmd for the next section: box plots, violin plots, and marginal plots.
 
 ```{r prepare_next}
 sessionInfo()

@@ -9,20 +9,10 @@ navigation:
   - heading: Introduction
   - title: Introduction to the Workshop and the Core
     url: base/welcome
-#  - title: Schedule
-#    url: base/schedule
 
-  - heading: Support
-  - title: Slack
-    url: base/slack
-  - title: Zoom
-    url: base/zoom
-  # - title: Cheat Sheets
-  #   url: base/cheatSheetIndex
-
-  # - heading: Introduction to R
-  # - title: Introduction to R Day 1
-  #   url: R/Intro2R_day1
+   - heading: Course Materials 
+   - title: Introduction to ggplot2 and box plots 
+     url: R/01-boxplot
   # - title: Introduction to R Day 2
   #   url: R/Intro2R_day2
   # - title: Introduction to R Day 3
@@ -35,8 +25,6 @@ navigation:
     url: R/01-scatterplot
 
   - heading: ETC
-  - title: Closing thoughts
-    url: base/closing
   - title: Github page
     url: https://github.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics
   - title: Biocore website
