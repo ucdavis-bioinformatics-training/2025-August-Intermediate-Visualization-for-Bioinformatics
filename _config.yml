@@ -12,7 +12,7 @@ navigation:
 
   - heading: Course Materials 
   - title: Introduction to ggplot2 and box plots 
-  - url: R/01-boxplot
+    url: R/01-boxplot
  # - title: Challenge solutions
  #   url: R/challenge_solutions
 
