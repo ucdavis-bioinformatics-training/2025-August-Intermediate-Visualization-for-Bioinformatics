@@ -13,8 +13,14 @@ navigation:
   - heading: Course Materials 
   - title: Introduction to ggplot2 and box plots 
     url: R/01-boxplot
- # - title: Challenge solutions
- #   url: R/challenge_solutions
+  - title: Scatter plots
+    url: R/02-scatterplot
+  - title: Bar plots
+    url: R/03-barplot
+  - title: Advanced plotting
+    url: R/04-custom
+# - title: Challenge solutions
+#   url: R/challenge_solutions
 
   - heading: ETC
   - title: Github page

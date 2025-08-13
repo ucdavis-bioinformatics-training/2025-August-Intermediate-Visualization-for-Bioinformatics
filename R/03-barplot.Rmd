@@ -1,0 +1,190 @@
+---
+title: 'Visualizations in R: bar, column, alluvial, and chord plots'
+author: "UC Davis Bioinformatics Core"
+date: "`r Sys.Date()`"
+always_allow_html: true
+output:
+  md_document:
+    variant: gfm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+# Introduction to bar, column, alluvial, and chord plots
+
+Bar and column charts are among the simplest visualizations available; a rectangular area represents the relationship between a categorical value and a quantitative one. The related alluvial diagram adds an additional layer of complexity by overlaying connections between the bars. A chord diagram is very similar to an alluvial diagram, but circularized.
+
+## Bar chart
+
+A bar chart is useful for displaying count data. The independent variable is categorical, and the dependent variable (the bar's height) corresponds to the number of observations within each category.
+
+## Column chart
+
+A column chart is simply a more flexible bar chart. Column height may represent data points, rather than counts.
+
+## Alluvial diagram
+
+Alluvial diagrams allow the display of one data point's value across several categorical variables, with each column representing a single variable. All columns have the same height, and each is partitioned (using fill) to display the frequency of values for the corresponding variable. Ribbons connecting each column to the next reveal relationships between categorical variables.
+
+## Chord diagram
+
+A chord diagram is effectively an alluvial diagram on polar coordinates. It shares the characteristic flow indicator ribbons, but instead of a horizontal axis, the "columns" are wrapped around a circle.
+
+# Set up
+
+## Packages
+
+In addition to ggplot2, we will be using ggalluvial, which builds on ggplot2 functions to create alluvial diagrams, and circlize, a package design to bring [circos](https://circos.ca/)-style plots into R. The tidyverse packages dplyr and tidyr are used to reshape data for ggplot2.
+
+```{r libraries}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(ggalluvial)
+library(circlize)
+```
+
+## Data
+
+We will be using a few different data sources in this section.
+
+```{r data}
+# cluster membership data for bar chart
+sc.data <- readRDS("scRNA_workshop-05.rds")@meta.data
+sc.data$barcode <- rownames(sc.data)
+sc.data$subcluster_ScType_filtered <- gsub("Unknown", NA, sc.data$subcluster_ScType_filtered)
+sc.data <- sc.data[,c("barcode", "group", "Phase", "subcluster", "subcluster_ScType_filtered")]
+# KEGG data for column chart
+kegg <- read.csv("mouse_KEGG.csv")
+# expression value data for column chart
+expression.data <- as.matrix(readRDS("scRNA_workshop-05.rds")@assays$RNA$data)
+markers <- c("SATB2", "NXPE1", "PDE3A", "CFTR", "HNF1A-AS1", "ADAMTSL1", "AC073050.1", "PID1", "NEO1", "XIST", "NR5A2", "AC019330.1", "CNTN4", "CNTN3", "SPON1", "LEFTY1")
+markers <- markers[markers %in% rownames(expression.data)]
+expression.data <- expression.data[markers,]
+expression.df <- as.data.frame(t(expression.data))
+expression.df$barcode <- rownames(expression.df)
+expression.pivot <- pivot_longer(expression.df, names_to = "gene", values_to = "normalized.counts", cols = SATB2:LEFTY1)
+rm(expression.data, markers, expression.df)
+# treatment data for alluvial diagram
+treatment.df <- read.csv("treatment.csv")
+# VDJ data for chord diagrams
+```
+
+
+# Counting occurances with bar charts
+
+Count-based data is the simplest and most straightforward application of this type of chart. 
+
+```{r basic_bar}
+ggplot(data = sc.data, mapping = aes(x = subcluster, fill = group)) +
+  geom_bar() +
+  scale_fill_viridis_d(option = "rocket", end = 0.95, direction = -1) +
+  theme_bw() +
+  theme(legend.title = element_blank(),
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+# Displaying numerical values with column charts
+
+## A single value
+
+Representing a single value with a column chart is simple, but there are relatively few occasions in bioinformatics where this is the most useful visualization style. When dealing with high-throughput data, it's rare to have a single observation of any variable.
+
+One good application is as an alternative to dot plots in gene set enrichment analyses.
+
+```{r basic_column}
+kegg$short.description <- sapply(strsplit(kegg$Description, split = " - ", fixed = TRUE), "[[", 1L)
+
+arrange(kegg, pvalue) %>%
+  slice_head(n = 25) %>%
+  ggplot(mapping = aes(x = short.description, y = enrichmentScore, fill = p.adjust)) +
+  geom_col() +
+  scale_fill_distiller(palette = "Reds") +
+  labs(y = "KEGG enrichment score", fill = "Adjusted p-value") +
+  coord_flip() +
+  theme_bw() +
+  theme(axis.title.y = element_blank())
+```
+By default, ggplot2 arranges characters alphanumerically; our categorical axis is arranged with "Adherens junction" at one end and "Regulation of actin cytoskeleton" at the other. We can change the "short.description" character vector to a factor to control the ordering (e.g. with the most enriched pathway at the top).
+
+```{r factor_levels}
+kegg.small <- arrange(kegg, pvalue) %>%
+  slice_head(n = 25)
+kegg.small$short.description <- factor(kegg.small$short.description, levels = kegg.small$short.description[order(kegg.small$enrichmentScore, decreasing = FALSE)])
+
+ggplot(data = kegg.small,
+       mapping = aes(x = short.description,
+                     y = enrichmentScore,
+                     fill = p.adjust)) +
+  geom_col() +
+  scale_fill_distiller(palette = "Reds") +
+  labs(y = "KEGG enrichment score", fill = "Adjusted p-value") +
+  coord_flip() +
+  theme_bw() +
+  theme(axis.title.y = element_blank())
+```
+
+## A computed value
+
+Think carefully about the appropriateness of using column charts to display a computed mean. In many cases a box or violin plot may be more informative; these visualizations are designed to for comparing distributions.
+
+If the standard for your field is a column chart, or you have few enough observations that a column chart is more readable than a box or violin plot, make sure to add an indication of the variability of your data (e.g. an error bar).
+
+```{r error_bar}
+summarise(expression.pivot,
+          .by = gene,
+          mean = mean(normalized.counts),
+          sd = sd(normalized.counts)) %>%
+  ggplot(mapping = aes(x = gene, fill = gene)) +
+  geom_col(mapping = aes(y = mean)) +
+  geom_errorbar(mapping = aes(ymin = mean - sd, ymax = mean + sd)) +
+  scale_fill_viridis_d(option = "turbo") +
+  guides(fill = "none") +
+  labs(y = "Mean normalized expression") +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+# Connecting categorical values with alluvial diagrams
+
+Alluvial diagrams are particularly useful for showing the transition of data from one state to another over time.
+
+```{r}
+treatment.df
+treatment.df <- treatment.df[treatment.df$treatment != "B",]
+treatment.categorical <- apply(treatment.df[,c("day_0", "day_14", "day_28", "day_42")], 2, function(x){
+  ifelse(x > 50, "high", ifelse(x > 30, "moderate", "normal"))
+})
+treatment.categorical <- cbind(treatment.df[,c("id", "treatment")], treatment.categorical)
+treatment.categorical$treatment <- gsub("Control", "Mock", treatment.categorical$treatment)
+treatment.categorical$treatment <- gsub("Healthy", "Healthy Control", treatment.categorical$treatment)
+treatment.categorical$treatment <- gsub("A", "Treatment", treatment.categorical$treatment)
+treatment.categorical$treatment <- factor(treatment.categorical$treatment,
+                                          levels = c("Mock", "Treatment", "Healthy Control"))
+
+ggplot(data = treatment.categorical, mapping = aes(axis1 = day_0,
+                                                   axis2 = day_14,
+                                                   axis3 = day_28,
+                                                   axis4 = day_42)) +
+  geom_stratum() +
+  geom_alluvium(aes(fill = treatment)) +
+  geom_text(stat = "stratum", aes(label = paste(after_stat(stratum)))) +
+  scale_fill_viridis_d() +
+  theme_minimal()
+```
+
+# Circularization
+
+## Further uses for circos-style visualizations
+
+# Prepare for the next section
+
+```{r prepare_next}
+sessionInfo()
+```
+
