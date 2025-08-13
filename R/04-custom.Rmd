@@ -12,22 +12,64 @@ output:
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
-## R Markdown
+# Advanced and custom plots
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## TSS enrichments plots
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Heat maps
 
-```{r cars}
-summary(cars)
+## Dendrograms
+
+## Genomic coverage plots
+
+# Set up
+
+## Packages
+
+In addition to ggplot2, we will use the ggplot extension libraries ggtree and ggcoverage as well as ComplexHeatmap, which uses a completely different "grammar."
+
+```{r libraries}
+library(ggplot2)
+library(ggtree)
+library(ggcoverage)
+library(ComplexHeatmap)
 ```
 
-## Including Plots
+## Data
 
-You can also embed plots, for example:
+We will be making use of a few different data sets in this section: one for each of the plots.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r data}
+# ATAC-seq for TSS enrichment
+# scRNA for heat map
+# dendrogram data
+# genomic coverage data
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# TSS enrichment
+
+# Heat map
+
+# Dendrogram
+
+# Genomic coverage
+
+# Final thoughts
+
+There are many types of visualizations we haven't had the chance to cover, and more visualizations are developed all the time. We hope that what you've learned within this course will allow you to customize your plots and figures to communicate your findings.
+
+Here are a few things to think about as you choose how to present your work using graphics:
+
+- **Color** Make sure to choose colors that provide sufficient contrast between relevant data. Try to keep color palettes small; using a limited number of colors (typically no more than 12 within one figure) increases the readability of figures.
+
+- **Size** Accurately estimating differences in area is difficult, so consider alternatives to pie charts and other area-based visualizations. Additionally, differences in size (e.g. of points) imply quantitative differences within the data; point size should not be mapped to a qualitative measure. Make sure that any plot elements are sized so that they are easily distinguishable. Ideally, they will be large enough to see clearly, but small enough to avoid extensive overlaps.
+
+- **Redundancy** Each graphical attribute of a plot communicates information. When choosing which to use in any given figure, consider whether redundancy (e.g. using both point color and point shape to denote treatment group) increases clarity or introduces unnecessary complexity. Sometimes, using fewer aesthetics speeds reader comprehension.
+
+- **Consistency** Maintain the order of categorical values on axes across figures. Any time a color palette is re-used within a publication, poster, or presentation, it should map to the same values to avoid confusion.
+
+We hope this workshop has been helpful for you! Please email us at bioinformatics-training@ucdavis.edu or reach out on GitHub with any questions or comments about the course or course materials.
+```{r sessionInfo}
+sessionInfo()
+```
+

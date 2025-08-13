@@ -613,7 +613,8 @@ plot_grid(top.row, bottom.row, ncol = 1)
 
 Before closing out this section, download the .Rmd for the next section: box plots, violin plots, and marginal plots.
 
-```{r prepare_next}
+```{r prepare_next, eval=FALSE}
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/R/03-barplot.Rmd")
 sessionInfo()
 ```
 

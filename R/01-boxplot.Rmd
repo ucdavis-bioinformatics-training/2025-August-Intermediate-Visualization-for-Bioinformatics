@@ -560,5 +560,7 @@ ggplot(data = sc.data, mapping = aes(x = putative, y = PDE3A)) +
 # Prepare for the next section
 
 ```{r prepare_next}
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/R/02-scatterplot.Rmd")
+sessionInfo()
 ```
 

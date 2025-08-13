@@ -11,6 +11,8 @@ navigation:
     url: base/welcome
 
   - heading: Course Materials 
+  - title: Prepare R and RStudio
+    url: R/00-prepare
   - title: Introduction to ggplot2 and box plots 
     url: R/01-boxplot
   - title: Scatter plots
