@@ -44,53 +44,21 @@ library(ggExtra)
 
 ## Data
 
-We'll use gene expression data from a single cell experiment for these plots. Typically this sort of data is stored in a complex structure which retains expression data and experiment metadata together in a single object. In this case, we will be using a Seurat object created in one of our single cell RNA-Seq workshops.
+We'll use gene expression data from a single cell experiment for these plots. Typically this sort of data is stored in a complex structure which retains expression data and experiment metadata together in a single object. In this case, the data provided has been extracted from the Seurat object used in the single cell workshop. Only a small number of markers are used to limit the size of the object.
 
 ```{r data}
-experiment.data <- readRDS("scRNA_workshop-05.rds")
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/sc_data.csv", "sc_data.csv")
+sc.data <- read.csv("sc_data.csv")
 ```
 
-This workshop does not aim to give a comprehensive understanding of the Seurat workflow and object; the relevant data for the purposes of box and violin plots are the scaled counts and experiment metadata.
+Relevant metadata from the Seurat object has been added to the expression data to form a single data frame.
 
-Normalized expression data is stored in the "data" slot, and can be accessed as follows:
-
-```{r normalized.data, eval=FALSE}
-experiment.data@assays$RNA$data
-```
-
-The metadata is stored in another slot within this object.
-
-```{r metadata}
-experiment.data@meta.data %>%
-  slice(1:50) %>%
-  kable() %>%
-  kable_styling("striped", fixed_thead = TRUE) %>%
-  scroll_box(height = "200px")
-```
-
-Let's create a smaller data frame containing the expression information for a select number of markers and a few key metadata values for each sample.
-
-```{r markers}
-markers <- c("SATB2", "NXPE1", "PDE3A", "CFTR", "HNF1A-AS1", "ADAMTSL1", "AC073050.1", "PID1", "NEO1", "XIST", "NR5A2", "AC019330.1", "CNTN4", "CNTN3", "SPON1", "LEFTY1")
-
-markers <- markers[markers %in% rownames(experiment.data@assays$RNA$data)]
-
-sc.data <- as.data.frame(t(as.matrix(experiment.data@assays$RNA$data[markers,])))
-sc.data$cell <- rownames(sc.data)
-
-metadata <- experiment.data@meta.data
-metadata$cell <- rownames(metadata)
-metadata <- select(metadata, cell, subcluster, subcluster_ScType_filtered)
-
-sc.data <- inner_join(metadata, sc.data, by = "cell")
-
+```{r view_data}
 slice(sc.data, 1:50) %>%
   kable() %>%
   kable_styling("striped", fixed_thead = TRUE) %>%
   scroll_box(height = "200px")
-rm(experiment.data, metadata, markers)
 ```
-
 
 # Basic plot
 
@@ -560,7 +528,7 @@ ggplot(data = sc.data, mapping = aes(x = putative, y = PDE3A)) +
 # Prepare for the next section
 
 ```{r prepare_next}
-download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/R/02-scatterplot.Rmd")
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/02-scatterplot.Rmd", "02-scatterplot.Rmd")
 sessionInfo()
 ```
 

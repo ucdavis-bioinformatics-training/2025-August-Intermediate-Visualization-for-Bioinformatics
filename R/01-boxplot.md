@@ -47,5626 +47,19 @@ library(ggExtra)
 We’ll use gene expression data from a single cell experiment for these
 plots. Typically this sort of data is stored in a complex structure
 which retains expression data and experiment metadata together in a
-single object. In this case, we will be using a Seurat object created in
-one of our single cell RNA-Seq workshops.
+single object. In this case, the data provided has been extracted from
+the Seurat object used in the single cell workshop. Only a small number
+of markers are used to limit the size of the object.
 
 ``` r
-experiment.data <- readRDS("scRNA_workshop-05.rds")
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/sc_data.csv", "sc_data.csv")
+sc.data <- read.csv("sc_data.csv")
 ```
 
-This workshop does not aim to give a comprehensive understanding of the
-Seurat workflow and object; the relevant data for the purposes of box
-and violin plots are the scaled counts and experiment metadata.
-
-Normalized expression data is stored in the “data” slot, and can be
-accessed as follows:
+Relevant metadata from the Seurat object has been added to the
+expression data to form a single data frame.
 
 ``` r
-experiment.data@assays$RNA$data
-```
-
-The metadata is stored in another slot within this object.
-
-``` r
-experiment.data@meta.data %>%
-  slice(1:50) %>%
-  kable() %>%
-  kable_styling("striped", fixed_thead = TRUE) %>%
-  scroll_box(height = "200px")
-```
-
-<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:200px; ">
-
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-
-<thead>
-
-<tr>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-orig.ident
-</th>
-
-<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-nCount_RNA
-</th>
-
-<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-nFeature_RNA
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-group
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-run
-</th>
-
-<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-percent_MT
-</th>
-
-<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-S.Score
-</th>
-
-<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-G2M.Score
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-Phase
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-old.ident
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-RNA_snn_res.0.1
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-RNA_snn_res.0.2
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-RNA_snn_res.0.3
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-RNA_snn_res.0.4
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-seurat_clusters
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-res.0.4_merged
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-subcluster
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-subcluster_ScType
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-subcluster_ScType_filtered
-</th>
-
-<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
-
-finalcluster
-</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAACCCAAGTTATGGA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2043
-</td>
-
-<td style="text-align:right;">
-
-1513
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.5717008
-</td>
-
-<td style="text-align:right;">
-
-0.0242106
-</td>
-
-<td style="text-align:right;">
-
--0.1155330
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-ENS glia
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAACGCTTCTCTGCTG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1402
-</td>
-
-<td style="text-align:right;">
-
-1038
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-1.1409396
-</td>
-
-<td style="text-align:right;">
-
-0.2751272
-</td>
-
-<td style="text-align:right;">
-
-0.8966284
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-6
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAAGAACGTGCTTATG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1634
-</td>
-
-<td style="text-align:right;">
-
-1136
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4191617
-</td>
-
-<td style="text-align:right;">
-
--0.0708949
-</td>
-
-<td style="text-align:right;">
-
--0.0599297
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5_1
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-5_1
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAAGAACGTTTCGCTC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1704
-</td>
-
-<td style="text-align:right;">
-
-1193
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4545455
-</td>
-
-<td style="text-align:right;">
-
-0.0654961
-</td>
-
-<td style="text-align:right;">
-
-1.0354100
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAAGAACTCTGGCTGG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-949
-</td>
-
-<td style="text-align:right;">
-
-814
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.6937562
-</td>
-
-<td style="text-align:right;">
-
--0.0377334
-</td>
-
-<td style="text-align:right;">
-
-0.1175223
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-4
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-Stromal cells
-</td>
-
-<td style="text-align:left;">
-
-Stromal cells
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAAGGATTCATTACCT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1194
-</td>
-
-<td style="text-align:right;">
-
-945
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.8071025
-</td>
-
-<td style="text-align:right;">
-
--0.0244222
-</td>
-
-<td style="text-align:right;">
-
-0.1248186
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAAGTGACACGCTTAA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2731
-</td>
-
-<td style="text-align:right;">
-
-1805
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.3216583
-</td>
-
-<td style="text-align:right;">
-
--0.0743887
-</td>
-
-<td style="text-align:right;">
-
-0.0186249
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5_2
-</td>
-
-<td style="text-align:left;">
-
-Stromal cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-5_2
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAAAGAGGCTAAAT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1607
-</td>
-
-<td style="text-align:right;">
-
-1155
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.8928571
-</td>
-
-<td style="text-align:right;">
-
--0.1237838
-</td>
-
-<td style="text-align:right;">
-
-0.0419251
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-4
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-<td style="text-align:left;">
-
-Stromal cells
-</td>
-
-<td style="text-align:left;">
-
-Stromal cells
-</td>
-
-<td style="text-align:left;">
-
-8
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAAAGTCTTGGTCC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2538
-</td>
-
-<td style="text-align:right;">
-
-1746
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.1922338
-</td>
-
-<td style="text-align:right;">
-
-0.1545636
-</td>
-
-<td style="text-align:right;">
-
--0.1093509
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAAGACATAGAGGC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1897
-</td>
-
-<td style="text-align:right;">
-
-1445
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.7139215
-</td>
-
-<td style="text-align:right;">
-
-0.6718581
-</td>
-
-<td style="text-align:right;">
-
-0.1696297
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAAGAGTTTAGACC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-4235
-</td>
-
-<td style="text-align:right;">
-
-2540
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.2511416
-</td>
-
-<td style="text-align:right;">
-
-0.5910065
-</td>
-
-<td style="text-align:right;">
-
-0.1868783
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAGGGCAATAGGAT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2084
-</td>
-
-<td style="text-align:right;">
-
-1491
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4659832
-</td>
-
-<td style="text-align:right;">
-
-0.0874241
-</td>
-
-<td style="text-align:right;">
-
-0.2063970
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAGGGCATCTGTTT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-6668
-</td>
-
-<td style="text-align:right;">
-
-3543
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.1450537
-</td>
-
-<td style="text-align:right;">
-
-0.3685904
-</td>
-
-<td style="text-align:right;">
-
-0.3005523
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAGGGGTCCCTGAG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-980
-</td>
-
-<td style="text-align:right;">
-
-719
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.7835455
-</td>
-
-<td style="text-align:right;">
-
--0.0068710
-</td>
-
-<td style="text-align:right;">
-
-0.0132416
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-6
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACAGGGGTGTTACAC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1396
-</td>
-
-<td style="text-align:right;">
-
-1045
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.6250000
-</td>
-
-<td style="text-align:right;">
-
-0.0274687
-</td>
-
-<td style="text-align:right;">
-
-0.0553581
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCAACCATGGGCAA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-3302
-</td>
-
-<td style="text-align:right;">
-
-2055
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.3233392
-</td>
-
-<td style="text-align:right;">
-
-0.0038243
-</td>
-
-<td style="text-align:right;">
-
-0.0125395
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCACAGTCAACCAT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-4054
-</td>
-
-<td style="text-align:right;">
-
-2387
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.2655081
-</td>
-
-<td style="text-align:right;">
-
-0.2146213
-</td>
-
-<td style="text-align:right;">
-
-0.5965836
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCATGGTACGATTC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1802
-</td>
-
-<td style="text-align:right;">
-
-1300
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.2686728
-</td>
-
-<td style="text-align:right;">
-
-0.4236822
-</td>
-
-<td style="text-align:right;">
-
-0.1838327
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCCAACACAGCATT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-5411
-</td>
-
-<td style="text-align:right;">
-
-2959
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4321210
-</td>
-
-<td style="text-align:right;">
-
-0.1802900
-</td>
-
-<td style="text-align:right;">
-
-0.4591222
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCCAAGTCGGTGTC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1834
-</td>
-
-<td style="text-align:right;">
-
-1364
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4253057
-</td>
-
-<td style="text-align:right;">
-
--0.0934836
-</td>
-
-<td style="text-align:right;">
-
--0.0775423
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-ENS glia
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCTGAAGATTCGAA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-3848
-</td>
-
-<td style="text-align:right;">
-
-2333
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4527163
-</td>
-
-<td style="text-align:right;">
-
-0.5221604
-</td>
-
-<td style="text-align:right;">
-
-0.6572811
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCTGACAGTCAGCC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-3938
-</td>
-
-<td style="text-align:right;">
-
-2321
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.2229378
-</td>
-
-<td style="text-align:right;">
-
-0.2688958
-</td>
-
-<td style="text-align:right;">
-
-0.8493498
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-Lymphatic endothelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCTGAGTTGGTAGG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1318
-</td>
-
-<td style="text-align:right;">
-
-1039
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.9572901
-</td>
-
-<td style="text-align:right;">
-
-0.1681216
-</td>
-
-<td style="text-align:right;">
-
-0.8078883
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-Lymphatic endothelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACCTTTTCGCTCATC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-981
-</td>
-
-<td style="text-align:right;">
-
-776
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.6979063
-</td>
-
-<td style="text-align:right;">
-
-0.0040267
-</td>
-
-<td style="text-align:right;">
-
--0.0166809
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5_2
-</td>
-
-<td style="text-align:left;">
-
-Stromal cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-5_2
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACGAAAGTATGTCTG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1172
-</td>
-
-<td style="text-align:right;">
-
-721
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.6639004
-</td>
-
-<td style="text-align:right;">
-
--0.0661428
-</td>
-
-<td style="text-align:right;">
-
--0.0747148
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5_1
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-5_1
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AACGGGAAGAGGGTGG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1387
-</td>
-
-<td style="text-align:right;">
-
-1099
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-1.1243851
-</td>
-
-<td style="text-align:right;">
-
-0.5242471
-</td>
-
-<td style="text-align:right;">
-
-0.0287247
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGACAACAACACGTT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1137
-</td>
-
-<td style="text-align:right;">
-
-885
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.5132592
-</td>
-
-<td style="text-align:right;">
-
-0.4208438
-</td>
-
-<td style="text-align:right;">
-
-0.3445698
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGACTCCAGCTACAT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1379
-</td>
-
-<td style="text-align:right;">
-
-1038
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.3531073
-</td>
-
-<td style="text-align:right;">
-
--0.0201581
-</td>
-
-<td style="text-align:right;">
-
--0.0812678
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5
-</td>
-
-<td style="text-align:left;">
-
-5_2
-</td>
-
-<td style="text-align:left;">
-
-Stromal cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-5_2
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGATAGCATTGGGAG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1494
-</td>
-
-<td style="text-align:right;">
-
-1114
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.7115136
-</td>
-
-<td style="text-align:right;">
-
--0.0343704
-</td>
-
-<td style="text-align:right;">
-
--0.0056271
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGCATCCATCCCACT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2231
-</td>
-
-<td style="text-align:right;">
-
-1391
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.5510810
-</td>
-
-<td style="text-align:right;">
-
-0.0518141
-</td>
-
-<td style="text-align:right;">
-
-0.0255571
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-6
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGCCATCAAGACCTT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1814
-</td>
-
-<td style="text-align:right;">
-
-1265
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4841313
-</td>
-
-<td style="text-align:right;">
-
-0.0483830
-</td>
-
-<td style="text-align:right;">
-
--0.0533808
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-Tuft cells
-</td>
-
-<td style="text-align:left;">
-
-Tuft cells
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGCGAGCACGAGAAC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1256
-</td>
-
-<td style="text-align:right;">
-
-980
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4604758
-</td>
-
-<td style="text-align:right;">
-
--0.0403860
-</td>
-
-<td style="text-align:right;">
-
--0.0059914
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-6
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-9
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGCGTTCAGCCTATA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-942
-</td>
-
-<td style="text-align:right;">
-
-761
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.7960199
-</td>
-
-<td style="text-align:right;">
-
--0.0316891
-</td>
-
-<td style="text-align:right;">
-
-0.0644262
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-6
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-9
-</td>
-
-<td style="text-align:left;">
-
-11
-</td>
-
-<td style="text-align:left;">
-
-11
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-Lymphoid cells
-</td>
-
-<td style="text-align:left;">
-
-10
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGGAATAGACTCCGC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-3295
-</td>
-
-<td style="text-align:right;">
-
-2008
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4461630
-</td>
-
-<td style="text-align:right;">
-
--0.0135791
-</td>
-
-<td style="text-align:right;">
-
-0.7699682
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGGAATTCGTTCATT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2668
-</td>
-
-<td style="text-align:right;">
-
-1821
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4730713
-</td>
-
-<td style="text-align:right;">
-
-0.2752857
-</td>
-
-<td style="text-align:right;">
-
-0.3133345
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGTACCTCGCCACTT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2246
-</td>
-
-<td style="text-align:right;">
-
-1549
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4778454
-</td>
-
-<td style="text-align:right;">
-
-0.2451425
-</td>
-
-<td style="text-align:right;">
-
-0.6566478
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGTCGTGTCGCAGTC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1591
-</td>
-
-<td style="text-align:right;">
-
-1205
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.1820388
-</td>
-
-<td style="text-align:right;">
-
--0.0900911
-</td>
-
-<td style="text-align:right;">
-
--0.0757283
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGTCGTGTGCGAACA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2662
-</td>
-
-<td style="text-align:right;">
-
-1773
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.4330567
-</td>
-
-<td style="text-align:right;">
-
--0.0938635
-</td>
-
-<td style="text-align:right;">
-
--0.1193087
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGTTCGAGAACTGAT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1145
-</td>
-
-<td style="text-align:right;">
-
-894
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.1700680
-</td>
-
-<td style="text-align:right;">
-
--0.0307752
-</td>
-
-<td style="text-align:right;">
-
--0.0470116
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGTTCGCAGAAGTTA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1001
-</td>
-
-<td style="text-align:right;">
-
-772
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-2.6239067
-</td>
-
-<td style="text-align:right;">
-
-0.0998638
-</td>
-
-<td style="text-align:right;">
-
-0.0772789
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGTTCGGTACCTATG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1514
-</td>
-
-<td style="text-align:right;">
-
-1149
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.5148005
-</td>
-
-<td style="text-align:right;">
-
-0.0105391
-</td>
-
-<td style="text-align:right;">
-
--0.0305894
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-Tuft cells
-</td>
-
-<td style="text-align:left;">
-
-Tuft cells
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AAGTTCGTCCTCCACA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-6237
-</td>
-
-<td style="text-align:right;">
-
-3355
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.1555452
-</td>
-
-<td style="text-align:right;">
-
-0.1787459
-</td>
-
-<td style="text-align:right;">
-
-0.4338195
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATAGAGTCGCGTGCA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2041
-</td>
-
-<td style="text-align:right;">
-
-1402
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.5725191
-</td>
-
-<td style="text-align:right;">
-
-0.0017802
-</td>
-
-<td style="text-align:right;">
-
-0.0003999
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATCACGCAGCAATTC_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1413
-</td>
-
-<td style="text-align:right;">
-
-1111
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.8270159
-</td>
-
-<td style="text-align:right;">
-
-0.2103020
-</td>
-
-<td style="text-align:right;">
-
-0.6019287
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-Lymphatic endothelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATGAAGCAGCCTATA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2654
-</td>
-
-<td style="text-align:right;">
-
-1780
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.3289474
-</td>
-
-<td style="text-align:right;">
-
--0.0022276
-</td>
-
-<td style="text-align:right;">
-
--0.0878330
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-ENS glia
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATGAAGTCAGCGTCG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1685
-</td>
-
-<td style="text-align:right;">
-
-1272
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-1.0398614
-</td>
-
-<td style="text-align:right;">
-
-0.1172836
-</td>
-
-<td style="text-align:right;">
-
-0.0612130
-</td>
-
-<td style="text-align:left;">
-
-S
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-2
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-Tuft cells
-</td>
-
-<td style="text-align:left;">
-
-Tuft cells
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATGACCCAAGCGATG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1871
-</td>
-
-<td style="text-align:right;">
-
-1285
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.2601457
-</td>
-
-<td style="text-align:right;">
-
--0.1164721
-</td>
-
-<td style="text-align:right;">
-
--0.0523448
-</td>
-
-<td style="text-align:left;">
-
-G1
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATGACCTCGTAGCCG_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1979
-</td>
-
-<td style="text-align:right;">
-
-1313
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.5920079
-</td>
-
-<td style="text-align:right;">
-
-0.0422544
-</td>
-
-<td style="text-align:right;">
-
-0.5874028
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATGCCACAGGTGACA_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-2343
-</td>
-
-<td style="text-align:right;">
-
-1535
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-0.8720930
-</td>
-
-<td style="text-align:right;">
-
--0.1055068
-</td>
-
-<td style="text-align:right;">
-
-0.0278103
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-<td style="text-align:left;">
-
-Intestinal epithelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-3
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-AATGGAACAAGGGCAT_A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:right;">
-
-1299
-</td>
-
-<td style="text-align:right;">
-
-1015
-</td>
-
-<td style="text-align:left;">
-
-Colorectal Cancer
-</td>
-
-<td style="text-align:left;">
-
-A00509:126:HTLFWDMXX:1
-</td>
-
-<td style="text-align:right;">
-
-1.0534236
-</td>
-
-<td style="text-align:right;">
-
-0.3728563
-</td>
-
-<td style="text-align:right;">
-
-0.4312851
-</td>
-
-<td style="text-align:left;">
-
-G2M
-</td>
-
-<td style="text-align:left;">
-
-A001-C-007
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-1
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-<td style="text-align:left;">
-
-Lymphatic endothelial cells
-</td>
-
-<td style="text-align:left;">
-
-Unknown
-</td>
-
-<td style="text-align:left;">
-
-7
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-Let’s create a smaller data frame containing the expression information
-for a select number of markers and a few key metadata values for each
-sample.
-
-``` r
-markers <- c("SATB2", "NXPE1", "PDE3A", "CFTR", "HNF1A-AS1", "ADAMTSL1", "AC073050.1", "PID1", "NEO1", "XIST", "NR5A2", "AC019330.1", "CNTN4", "CNTN3", "SPON1", "LEFTY1")
-
-markers <- markers[markers %in% rownames(experiment.data@assays$RNA$data)]
-
-sc.data <- as.data.frame(t(as.matrix(experiment.data@assays$RNA$data[markers,])))
-sc.data$cell <- rownames(sc.data)
-
-metadata <- experiment.data@meta.data
-metadata$cell <- rownames(metadata)
-metadata <- select(metadata, cell, subcluster, subcluster_ScType_filtered)
-
-sc.data <- inner_join(metadata, sc.data, by = "cell")
-
 slice(sc.data, 1:50) %>%
   kable() %>%
   kable_styling("striped", fixed_thead = TRUE) %>%
@@ -5680,6 +73,11 @@ slice(sc.data, 1:50) %>%
 <thead>
 
 <tr>
+
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+
+X
+</th>
 
 <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
 
@@ -5718,7 +116,7 @@ CFTR
 
 <th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
 
-HNF1A-AS1
+HNF1A.AS1
 </th>
 
 <th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
@@ -5773,6 +171,11 @@ LEFTY1
 <tbody>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -5863,6 +266,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -5951,6 +359,11 @@ Lymphoid cells
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -6041,6 +454,11 @@ Intestinal epithelial cells
 
 <tr>
 
+<td style="text-align:right;">
+
+4
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTTTCGCTC_A001-C-007
@@ -6129,6 +547,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+5
+</td>
 
 <td style="text-align:left;">
 
@@ -6219,6 +642,11 @@ Stromal cells
 
 <tr>
 
+<td style="text-align:right;">
+
+6
+</td>
+
 <td style="text-align:left;">
 
 AAAGGATTCATTACCT_A001-C-007
@@ -6307,6 +735,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+7
+</td>
 
 <td style="text-align:left;">
 
@@ -6397,6 +830,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+8
+</td>
+
 <td style="text-align:left;">
 
 AACAAAGAGGCTAAAT_A001-C-007
@@ -6485,6 +923,11 @@ Stromal cells
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+9
+</td>
 
 <td style="text-align:left;">
 
@@ -6575,6 +1018,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+10
+</td>
+
 <td style="text-align:left;">
 
 AACAAGACATAGAGGC_A001-C-007
@@ -6663,6 +1111,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+11
+</td>
 
 <td style="text-align:left;">
 
@@ -6753,6 +1206,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+12
+</td>
+
 <td style="text-align:left;">
 
 AACAGGGCAATAGGAT_A001-C-007
@@ -6841,6 +1299,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+13
+</td>
 
 <td style="text-align:left;">
 
@@ -6931,6 +1394,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+14
+</td>
+
 <td style="text-align:left;">
 
 AACAGGGGTCCCTGAG_A001-C-007
@@ -7019,6 +1487,11 @@ Lymphoid cells
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+15
+</td>
 
 <td style="text-align:left;">
 
@@ -7109,6 +1582,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+16
+</td>
+
 <td style="text-align:left;">
 
 AACCAACCATGGGCAA_A001-C-007
@@ -7197,6 +1675,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+17
+</td>
 
 <td style="text-align:left;">
 
@@ -7287,6 +1770,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+18
+</td>
+
 <td style="text-align:left;">
 
 AACCATGGTACGATTC_A001-C-007
@@ -7375,6 +1863,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+19
+</td>
 
 <td style="text-align:left;">
 
@@ -7465,6 +1958,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+20
+</td>
+
 <td style="text-align:left;">
 
 AACCCAAGTCGGTGTC_A001-C-007
@@ -7553,6 +2051,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+21
+</td>
 
 <td style="text-align:left;">
 
@@ -7643,6 +2146,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+22
+</td>
+
 <td style="text-align:left;">
 
 AACCTGACAGTCAGCC_A001-C-007
@@ -7731,6 +2239,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+23
+</td>
 
 <td style="text-align:left;">
 
@@ -7821,6 +2334,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+24
+</td>
+
 <td style="text-align:left;">
 
 AACCTTTTCGCTCATC_A001-C-007
@@ -7909,6 +2427,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+25
+</td>
 
 <td style="text-align:left;">
 
@@ -7999,6 +2522,11 @@ Intestinal epithelial cells
 
 <tr>
 
+<td style="text-align:right;">
+
+26
+</td>
+
 <td style="text-align:left;">
 
 AACGGGAAGAGGGTGG_A001-C-007
@@ -8087,6 +2615,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+27
+</td>
 
 <td style="text-align:left;">
 
@@ -8177,6 +2710,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+28
+</td>
+
 <td style="text-align:left;">
 
 AAGACTCCAGCTACAT_A001-C-007
@@ -8265,6 +2803,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+29
+</td>
 
 <td style="text-align:left;">
 
@@ -8355,6 +2898,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+30
+</td>
+
 <td style="text-align:left;">
 
 AAGCATCCATCCCACT_A001-C-007
@@ -8443,6 +2991,11 @@ Lymphoid cells
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+31
+</td>
 
 <td style="text-align:left;">
 
@@ -8533,6 +3086,11 @@ Tuft cells
 
 <tr>
 
+<td style="text-align:right;">
+
+32
+</td>
+
 <td style="text-align:left;">
 
 AAGCGAGCACGAGAAC_A001-C-007
@@ -8621,6 +3179,11 @@ Lymphoid cells
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+33
+</td>
 
 <td style="text-align:left;">
 
@@ -8711,6 +3274,11 @@ Lymphoid cells
 
 <tr>
 
+<td style="text-align:right;">
+
+34
+</td>
+
 <td style="text-align:left;">
 
 AAGGAATAGACTCCGC_A001-C-007
@@ -8799,6 +3367,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+35
+</td>
 
 <td style="text-align:left;">
 
@@ -8889,6 +3462,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+36
+</td>
+
 <td style="text-align:left;">
 
 AAGTACCTCGCCACTT_A001-C-007
@@ -8977,6 +3555,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+37
+</td>
 
 <td style="text-align:left;">
 
@@ -9067,6 +3650,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+38
+</td>
+
 <td style="text-align:left;">
 
 AAGTCGTGTGCGAACA_A001-C-007
@@ -9155,6 +3743,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+39
+</td>
 
 <td style="text-align:left;">
 
@@ -9245,6 +3838,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+40
+</td>
+
 <td style="text-align:left;">
 
 AAGTTCGCAGAAGTTA_A001-C-007
@@ -9333,6 +3931,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+41
+</td>
 
 <td style="text-align:left;">
 
@@ -9423,6 +4026,11 @@ Tuft cells
 
 <tr>
 
+<td style="text-align:right;">
+
+42
+</td>
+
 <td style="text-align:left;">
 
 AAGTTCGTCCTCCACA_A001-C-007
@@ -9511,6 +4119,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+43
+</td>
 
 <td style="text-align:left;">
 
@@ -9601,6 +4214,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+44
+</td>
+
 <td style="text-align:left;">
 
 AATCACGCAGCAATTC_A001-C-007
@@ -9689,6 +4307,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+45
+</td>
 
 <td style="text-align:left;">
 
@@ -9779,6 +4402,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+46
+</td>
+
 <td style="text-align:left;">
 
 AATGAAGTCAGCGTCG_A001-C-007
@@ -9867,6 +4495,11 @@ Tuft cells
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+47
+</td>
 
 <td style="text-align:left;">
 
@@ -9957,6 +4590,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+48
+</td>
+
 <td style="text-align:left;">
 
 AATGACCTCGTAGCCG_A001-C-007
@@ -10046,6 +4684,11 @@ Unknown
 
 <tr>
 
+<td style="text-align:right;">
+
+49
+</td>
+
 <td style="text-align:left;">
 
 AATGCCACAGGTGACA_A001-C-007
@@ -10134,6 +4777,11 @@ Unknown
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+50
+</td>
 
 <td style="text-align:left;">
 
@@ -10227,10 +4875,6 @@ Unknown
 </table>
 
 </div>
-
-``` r
-rm(experiment.data, metadata, markers)
-```
 
 # Basic plot
 
@@ -10511,6 +5155,11 @@ pivot_longer(sc.data, cols = SATB2:LEFTY1, names_to = "gene", values_to = "norma
 
 <tr>
 
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+
+X
+</th>
+
 <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
 
 cell
@@ -10549,6 +5198,11 @@ normalized.counts
 
 <tr>
 
+<td style="text-align:right;">
+
+1
+</td>
+
 <td style="text-align:left;">
 
 AAACCCAAGTTATGGA_A001-C-007
@@ -10582,6 +5236,11 @@ SATB2
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -10617,6 +5276,11 @@ NXPE1
 
 <tr>
 
+<td style="text-align:right;">
+
+1
+</td>
+
 <td style="text-align:left;">
 
 AAACCCAAGTTATGGA_A001-C-007
@@ -10650,6 +5314,11 @@ PDE3A
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -10685,6 +5354,11 @@ CFTR
 
 <tr>
 
+<td style="text-align:right;">
+
+1
+</td>
+
 <td style="text-align:left;">
 
 AAACCCAAGTTATGGA_A001-C-007
@@ -10707,7 +5381,7 @@ NA
 
 <td style="text-align:left;">
 
-HNF1A-AS1
+HNF1A.AS1
 </td>
 
 <td style="text-align:right;">
@@ -10718,6 +5392,11 @@ HNF1A-AS1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -10753,6 +5432,11 @@ ADAMTSL1
 
 <tr>
 
+<td style="text-align:right;">
+
+1
+</td>
+
 <td style="text-align:left;">
 
 AAACCCAAGTTATGGA_A001-C-007
@@ -10786,6 +5470,11 @@ PID1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -10821,6 +5510,11 @@ NEO1
 
 <tr>
 
+<td style="text-align:right;">
+
+1
+</td>
+
 <td style="text-align:left;">
 
 AAACCCAAGTTATGGA_A001-C-007
@@ -10854,6 +5548,11 @@ XIST
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -10889,6 +5588,11 @@ NR5A2
 
 <tr>
 
+<td style="text-align:right;">
+
+1
+</td>
+
 <td style="text-align:left;">
 
 AAACCCAAGTTATGGA_A001-C-007
@@ -10922,6 +5626,11 @@ CNTN4
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -10957,6 +5666,11 @@ CNTN3
 
 <tr>
 
+<td style="text-align:right;">
+
+1
+</td>
+
 <td style="text-align:left;">
 
 AAACCCAAGTTATGGA_A001-C-007
@@ -10990,6 +5704,11 @@ SPON1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+1
+</td>
 
 <td style="text-align:left;">
 
@@ -11025,6 +5744,11 @@ LEFTY1
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11058,6 +5782,11 @@ SATB2
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+2
+</td>
 
 <td style="text-align:left;">
 
@@ -11093,6 +5822,11 @@ NXPE1
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11126,6 +5860,11 @@ PDE3A
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+2
+</td>
 
 <td style="text-align:left;">
 
@@ -11161,6 +5900,11 @@ CFTR
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11183,7 +5927,7 @@ Lymphoid cells
 
 <td style="text-align:left;">
 
-HNF1A-AS1
+HNF1A.AS1
 </td>
 
 <td style="text-align:right;">
@@ -11194,6 +5938,11 @@ HNF1A-AS1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+2
+</td>
 
 <td style="text-align:left;">
 
@@ -11229,6 +5978,11 @@ ADAMTSL1
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11262,6 +6016,11 @@ PID1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+2
+</td>
 
 <td style="text-align:left;">
 
@@ -11297,6 +6056,11 @@ NEO1
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11330,6 +6094,11 @@ XIST
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+2
+</td>
 
 <td style="text-align:left;">
 
@@ -11365,6 +6134,11 @@ NR5A2
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11398,6 +6172,11 @@ CNTN4
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+2
+</td>
 
 <td style="text-align:left;">
 
@@ -11433,6 +6212,11 @@ CNTN3
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11467,6 +6251,11 @@ SPON1
 
 <tr>
 
+<td style="text-align:right;">
+
+2
+</td>
+
 <td style="text-align:left;">
 
 AAACGCTTCTCTGCTG_A001-C-007
@@ -11500,6 +6289,11 @@ LEFTY1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -11535,6 +6329,11 @@ SATB2
 
 <tr>
 
+<td style="text-align:right;">
+
+3
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTGCTTATG_A001-C-007
@@ -11568,6 +6367,11 @@ NXPE1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -11603,6 +6407,11 @@ PDE3A
 
 <tr>
 
+<td style="text-align:right;">
+
+3
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTGCTTATG_A001-C-007
@@ -11637,6 +6446,11 @@ CFTR
 
 <tr>
 
+<td style="text-align:right;">
+
+3
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTGCTTATG_A001-C-007
@@ -11659,7 +6473,7 @@ Intestinal epithelial cells
 
 <td style="text-align:left;">
 
-HNF1A-AS1
+HNF1A.AS1
 </td>
 
 <td style="text-align:right;">
@@ -11670,6 +6484,11 @@ HNF1A-AS1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -11705,6 +6524,11 @@ ADAMTSL1
 
 <tr>
 
+<td style="text-align:right;">
+
+3
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTGCTTATG_A001-C-007
@@ -11738,6 +6562,11 @@ PID1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -11773,6 +6602,11 @@ NEO1
 
 <tr>
 
+<td style="text-align:right;">
+
+3
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTGCTTATG_A001-C-007
@@ -11806,6 +6640,11 @@ XIST
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -11841,6 +6680,11 @@ NR5A2
 
 <tr>
 
+<td style="text-align:right;">
+
+3
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTGCTTATG_A001-C-007
@@ -11874,6 +6718,11 @@ CNTN4
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -11909,6 +6758,11 @@ CNTN3
 
 <tr>
 
+<td style="text-align:right;">
+
+3
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTGCTTATG_A001-C-007
@@ -11942,6 +6796,11 @@ SPON1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+3
+</td>
 
 <td style="text-align:left;">
 
@@ -11977,6 +6836,11 @@ LEFTY1
 
 <tr>
 
+<td style="text-align:right;">
+
+4
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTTTCGCTC_A001-C-007
@@ -12010,6 +6874,11 @@ SATB2
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+4
+</td>
 
 <td style="text-align:left;">
 
@@ -12045,6 +6914,11 @@ NXPE1
 
 <tr>
 
+<td style="text-align:right;">
+
+4
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTTTCGCTC_A001-C-007
@@ -12078,6 +6952,11 @@ PDE3A
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+4
+</td>
 
 <td style="text-align:left;">
 
@@ -12113,6 +6992,11 @@ CFTR
 
 <tr>
 
+<td style="text-align:right;">
+
+4
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTTTCGCTC_A001-C-007
@@ -12135,7 +7019,7 @@ NA
 
 <td style="text-align:left;">
 
-HNF1A-AS1
+HNF1A.AS1
 </td>
 
 <td style="text-align:right;">
@@ -12146,6 +7030,11 @@ HNF1A-AS1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+4
+</td>
 
 <td style="text-align:left;">
 
@@ -12181,6 +7070,11 @@ ADAMTSL1
 
 <tr>
 
+<td style="text-align:right;">
+
+4
+</td>
+
 <td style="text-align:left;">
 
 AAAGAACGTTTCGCTC_A001-C-007
@@ -12214,6 +7108,11 @@ PID1
 </tr>
 
 <tr>
+
+<td style="text-align:right;">
+
+4
+</td>
 
 <td style="text-align:left;">
 
@@ -12618,3 +7517,43 @@ ggplot(data = sc.data, mapping = aes(x = putative, y = PDE3A)) +
 ![](01-boxplot_files/figure-gfm/violin_box-1.png)<!-- -->
 
 # Prepare for the next section
+
+``` r
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/02-scatterplot.Rmd", "02-scatterplot.Rmd")
+sessionInfo()
+```
+
+    ## R version 4.5.1 (2025-06-13)
+    ## Platform: aarch64-apple-darwin20
+    ## Running under: macOS Monterey 12.4
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+    ## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+    ## 
+    ## locale:
+    ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+    ## 
+    ## time zone: America/Los_Angeles
+    ## tzcode source: internal
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] ggExtra_0.10.1   ggsignif_0.6.4   ggplot2_3.5.2    kableExtra_1.4.0
+    ## [5] magrittr_2.0.3   tidyr_1.3.1      dplyr_1.1.4     
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] miniUI_0.1.2       gtable_0.3.6       compiler_4.5.1     promises_1.3.3    
+    ##  [5] Rcpp_1.1.0         tidyselect_1.2.1   xml2_1.3.8         stringr_1.5.1     
+    ##  [9] later_1.4.2        systemfonts_1.2.3  scales_1.4.0       textshaping_1.0.1 
+    ## [13] yaml_2.3.10        fastmap_1.2.0      mime_0.13          R6_2.6.1          
+    ## [17] labeling_0.4.3     generics_0.1.4     knitr_1.50         tibble_3.3.0      
+    ## [21] shiny_1.11.1       svglite_2.2.1      pillar_1.11.0      RColorBrewer_1.1-3
+    ## [25] rlang_1.1.6        stringi_1.8.7      httpuv_1.6.16      xfun_0.52         
+    ## [29] viridisLite_0.4.2  cli_3.6.5          withr_3.0.2        digest_0.6.37     
+    ## [33] grid_4.5.1         xtable_1.8-4       rstudioapi_0.17.1  lifecycle_1.0.4   
+    ## [37] vctrs_0.6.5        evaluate_1.0.4     glue_1.8.0         farver_2.1.2      
+    ## [41] rmarkdown_2.29     purrr_1.1.0        tools_4.5.1        pkgconfig_2.0.3   
+    ## [45] htmltools_0.5.8.1
