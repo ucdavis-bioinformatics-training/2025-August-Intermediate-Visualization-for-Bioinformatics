@@ -73,23 +73,28 @@ library(ggrepel)
 
 ## Data
 
-The data for our volcano plot comes from our RNA-Seq workshop, at a
-point in the analysis after the first contrast of the differential
-expression analysis has been computed. The code assumes that a table of
-differential expression results and an Ensembl Biomart annotation export
-are available.
+For this section we will be using four data sources: expression data,
+annotations, MDS coordinates, and KEGG enrichment data.
 
 ``` r
+# Expression data
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/mouse_DE_result.txt", "mouse_DE_result.txt")
 de <- read.delim("mouse_DE_result.txt", sep = " ")
 de$Gene.stable.ID.version <- rownames(de)
+
+# Annotations
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/mouse_annotations.txt", "mouse_annotations.txt")
 anno <- read.delim("mouse_annotations.txt", sep = " ")
 anno <- anno[!duplicated(anno$Gene.stable.ID.version),]
-```
 
-*Explore the data.* What values are available in each table? Which
-columns are relevant to creating the volcano plot? Is the data ready to
-plot as-is? If not, what transformations do you need to do in order
-prepare for the plot?
+# MDS data
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/mouse_mds.csv", "mouse_mds.csv")
+mds <- read.csv("mouse_mds.csv")
+
+# KEGG data
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/mouse_KEGG.csv", "mouse_KEGG.csv")
+kegg <- read.csv("mouse_KEGG.csv")
+```
 
 # Plot points
 
@@ -107,6 +112,11 @@ ggplot(data = de, mapping = aes(x = logFC, y = P.Value)) +
 ```
 
 ![](02-scatterplot_files/figure-gfm/scatter-1.png)<!-- -->
+
+*Explore the data.* What values are available in each table? Which
+columns are relevant to creating the volcano plot? Is the data ready to
+plot as-is? If not, what transformations do you need to do in order
+prepare for the plot?
 
 # Transformations
 
@@ -2876,7 +2886,6 @@ value to a small number of points. For this example, we will use an MDS
 plot.
 
 ``` r
-mds <- read.csv("mouse_mds.csv")
 q <- ggplot(data = mds, mapping = aes(x = x, y = y, color = genotype, shape = cell_type)) +
   geom_point(size = 3) +
   labs(x = "Leading logFC dim 1", y = "Leading logFC dim 2", color = "Genotype", shape = "Cell type") +
@@ -2905,7 +2914,6 @@ represented by a single point, so there’s no need to worry about larger
 point sizes causing difficulty.
 
 ``` r
-kegg <- read.csv("mouse_KEGG.csv")
 kegg$displayName <- sapply(strsplit(kegg$Description, split = " -"), "[[", 1L)
 r <- kegg %>%
   arrange(p.adjust) %>%
