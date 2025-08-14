@@ -55,21 +55,15 @@ We will be using a few different data sources in this section.
 
 ``` r
 # cluster membership data for bar chart
-sc.data <- readRDS("scRNA_workshop-05.rds")@meta.data
-sc.data$barcode <- rownames(sc.data)
-sc.data$subcluster_ScType_filtered <- gsub("Unknown", NA, sc.data$subcluster_ScType_filtered)
-sc.data <- sc.data[,c("barcode", "group", "Phase", "subcluster", "subcluster_ScType_filtered")]
+sc.data <- read.csv("sc_data.csv")
+cluster.data <- select(sc.data, cell, subcluster, subcluster_ScType_filtered)
+cluster.data$subcluster_ScType_filtered <- gsub("Unknown", NA, cluster.data$subcluster_ScType_filtered)
+cluster.data$group <- factor(gsub("B001-A-301", "Normal", gsub("A001-C-104", "Polyp", gsub("A001-C-007", "Cancer", sapply(strsplit(cluster.data$cell, split = "_"), "[[", 2)))), levels = c("Normal", "Polyp", "Cancer"))
 # KEGG data for column chart
 kegg <- read.csv("mouse_KEGG.csv")
 # expression value data for column chart
-expression.data <- as.matrix(readRDS("scRNA_workshop-05.rds")@assays$RNA$data)
-markers <- c("SATB2", "NXPE1", "PDE3A", "CFTR", "HNF1A-AS1", "ADAMTSL1", "AC073050.1", "PID1", "NEO1", "XIST", "NR5A2", "AC019330.1", "CNTN4", "CNTN3", "SPON1", "LEFTY1")
-markers <- markers[markers %in% rownames(expression.data)]
-expression.data <- expression.data[markers,]
-expression.df <- as.data.frame(t(expression.data))
-expression.df$barcode <- rownames(expression.df)
-expression.pivot <- pivot_longer(expression.df, names_to = "gene", values_to = "normalized.counts", cols = SATB2:LEFTY1)
-rm(expression.data, markers, expression.df)
+expression.pivot <- pivot_longer(sc.data, names_to = "gene", values_to = "normalized.counts", cols = SATB2:LEFTY1) %>%
+  select(cell, gene, normalized.counts)
 # treatment data for alluvial diagram
 treatment.df <- read.csv("treatment.csv")
 # VDJ data for chord diagrams
@@ -81,7 +75,7 @@ Count-based data is the simplest and most straightforward application of
 this type of chart.
 
 ``` r
-ggplot(data = sc.data, mapping = aes(x = subcluster, fill = group)) +
+ggplot(data = cluster.data, mapping = aes(x = subcluster, fill = group)) +
   geom_bar() +
   scale_fill_viridis_d(option = "rocket", end = 0.95, direction = -1) +
   theme_bw() +
@@ -237,6 +231,41 @@ ggplot(data = treatment.categorical, mapping = aes(axis1 = day_0,
 # Prepare for the next section
 
 ``` r
-download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/R/04-custom.Rmd")
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/04-custom.Rmd", "04-custom.Rmd")
 sessionInfo()
 ```
+
+    ## R version 4.5.1 (2025-06-13)
+    ## Platform: aarch64-apple-darwin20
+    ## Running under: macOS Monterey 12.4
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+    ## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+    ## 
+    ## locale:
+    ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+    ## 
+    ## time zone: America/Los_Angeles
+    ## tzcode source: internal
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] circlize_0.4.16   ggalluvial_0.12.5 tidyr_1.3.1       dplyr_1.1.4      
+    ## [5] ggplot2_3.5.2    
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] vctrs_0.6.5         cli_3.6.5           knitr_1.50         
+    ##  [4] rlang_1.1.6         xfun_0.52           purrr_1.1.0        
+    ##  [7] generics_0.1.4      labeling_0.4.3      glue_1.8.0         
+    ## [10] colorspace_2.1-1    htmltools_0.5.8.1   GlobalOptions_0.1.2
+    ## [13] scales_1.4.0        rmarkdown_2.29      grid_4.5.1         
+    ## [16] evaluate_1.0.4      tibble_3.3.0        fastmap_1.2.0      
+    ## [19] yaml_2.3.10         lifecycle_1.0.4     compiler_4.5.1     
+    ## [22] RColorBrewer_1.1-3  pkgconfig_2.0.3     rstudioapi_0.17.1  
+    ## [25] farver_2.1.2        digest_0.6.37       viridisLite_0.4.2  
+    ## [28] R6_2.6.1            tidyselect_1.2.1    shape_1.4.6.1      
+    ## [31] pillar_1.11.0       magrittr_2.0.3      withr_3.0.2        
+    ## [34] tools_4.5.1         gtable_0.3.6
