@@ -4526,6 +4526,40 @@ Before closing out this section, download the .Rmd for the next section:
 box plots, violin plots, and marginal plots.
 
 ``` r
-download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/R/03-barplot.Rmd")
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/03-barplot.Rmd", "03-barplot.Rmd")
 sessionInfo()
 ```
+
+    ## R version 4.5.1 (2025-06-13)
+    ## Platform: aarch64-apple-darwin20
+    ## Running under: macOS Monterey 12.4
+    ## 
+    ## Matrix products: default
+    ## BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+    ## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+    ## 
+    ## locale:
+    ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+    ## 
+    ## time zone: America/Los_Angeles
+    ## tzcode source: internal
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] qqman_0.1.9      ggrepel_0.9.6    ggplot2_3.5.2    kableExtra_1.4.0
+    ## [5] magrittr_2.0.3   dplyr_1.1.4     
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] gtable_0.3.6       compiler_4.5.1     tidyselect_1.2.1   Rcpp_1.1.0        
+    ##  [5] xml2_1.3.8         stringr_1.5.1      systemfonts_1.2.3  scales_1.4.0      
+    ##  [9] textshaping_1.0.1  yaml_2.3.10        fastmap_1.2.0      lattice_0.22-7    
+    ## [13] hexbin_1.28.5      R6_2.6.1           labeling_0.4.3     generics_0.1.4    
+    ## [17] isoband_0.2.7      knitr_1.50         MASS_7.3-65        tibble_3.3.0      
+    ## [21] svglite_2.2.1      pillar_1.11.0      RColorBrewer_1.1-3 rlang_1.1.6       
+    ## [25] calibrate_1.7.7    stringi_1.8.7      xfun_0.52          viridisLite_0.4.2 
+    ## [29] cli_3.6.5          withr_3.0.2        digest_0.6.37      grid_4.5.1        
+    ## [33] rstudioapi_0.17.1  lifecycle_1.0.4    vctrs_0.6.5        evaluate_1.0.4    
+    ## [37] glue_1.8.0         farver_2.1.2       rmarkdown_2.29     tools_4.5.1       
+    ## [41] pkgconfig_2.0.3    htmltools_0.5.8.1
