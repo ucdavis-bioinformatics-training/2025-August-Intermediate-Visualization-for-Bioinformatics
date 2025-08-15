@@ -14,25 +14,27 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 # Advanced and custom plots
 
-## TSS enrichments plots
+In this section we will cover a number of unrelated types of plots that require extensions to ggplot2 or different libraries. While many unique visualizations exist, we have limited time to cover them in class and have selected a few popular styles:
 
-## Heat maps
-
-## Dendrograms
-
-## Genomic coverage plots
+- Expression heat map
+- Dendrogram
+- TSS enrichment
+- Genomic coverage
 
 # Set up
 
 ## Packages
 
-In addition to ggplot2, we will use the ggplot extension libraries ggtree and ggcoverage as well as ComplexHeatmap, which uses a completely different "grammar."
+In addition to ggplot2, we will use the ggplot extension libraries ggtree and ggcoverage as well as ComplexHeatmap, which uses a completely different "grammar." Seurat and Signac functions create wrappers around ggplot2, and produce plot objects that can be further modified using ggplot grammar.
 
 ```{r libraries}
+library(ComplexHeatmap)
+library(viridis)
 library(ggplot2)
+library(Signac)
+library(Seurat)
 library(ggtree)
 library(ggcoverage)
-library(ComplexHeatmap)
 ```
 
 ## Data
@@ -40,19 +42,134 @@ library(ComplexHeatmap)
 We will be making use of a few different data sets in this section: one for each of the plots.
 
 ```{r data}
-# ATAC-seq for TSS enrichment
 # scRNA for heat map
+sc.data <- read.csv("sc_data.csv")
 # dendrogram data
+# ATAC-seq for TSS enrichment
 # genomic coverage data
 ```
 
-# TSS enrichment
-
 # Heat map
+
+Heat maps use areas of color to display expression intensity for samples across a number of markers. While it is possible to create heat maps that display expression values for all genes, reading these plots becomes difficult when the number of markers is much greater than 25-30. For single cell or single nucleus experiments, the number of samples may be in the tens or hundreds of thousands. In this case, the purpose of the plot is to get a general overview, not assess expression in any given sample, and the area corresponding to each cell or nucleus is very small.
+
+## Basic heat map
+
+```{r, basic_heat}
+sc.mat <- as.matrix(sc.data[,5:18])
+rownames(sc.mat) <- sc.data$cell
+sc.mat <- t(sc.mat)
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts")
+```
+
+The column dendrogram and names are illegible; with more than six thousand cells, the overlap between lines is extensive. The length of the column names has also caused vertical compression of the heat map as the plot area is reduced to accommodate the axis text.
+
+```{r clean_columns}
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts",
+        show_column_dend = FALSE,
+        show_column_names = FALSE)
+```
+
+There are many excellent features in ComplexHeatmap that allow you to tune the readability of your visualization and emphasize the findings of the greatest importance.
+
+## Annotated heat map
+
+Having removed the cell names and dendrogram in pursuit of readability, we now lack any information about the sample identity of the cells in our heatmap. This can be added back in with a column annotation.
+
+```{r columnAnnotation}
+sc.data$subcluster_ScType_filtered <- gsub("Unknown", NA, sc.data$subcluster_ScType_filtered)
+celltype.colors <- viridis(length(names(table(sc.data$subcluster_ScType_filtered))))
+names(celltype.colors) <- names(table(sc.data$subcluster_ScType_filtered))
+cluster.colors <- viridis(length(unique(sc.data$subcluster)), option = "turbo")
+names(cluster.colors) <- unique(sc.data$subcluster)
+top.anno <- columnAnnotation("cluster" = sc.data$subcluster,
+                             "celltype" = sc.data$subcluster_ScType_filtered,
+                             col = list("cluster" = cluster.colors,
+                                        "celltype" = celltype.colors),
+                             na_col = "gray90")
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts",
+        show_column_dend = FALSE,
+        show_column_names = FALSE,
+        top_annotation = top.anno)
+```
+
+Since we have so many missing values in our cell type data, we may not want to include that annotation.
+
+## Split heat map
+
+These heat maps can be divided into slices to group rows, columns, or both. Heat maps can be split following variation in the data (using k-means clustering), or by categorical values in the metadata.
+
+### Split on k-means clustering
+
+The code below demonstrates k-means clustering on the rows (markers) of the heat map. K is provided by the user.
+
+```{r kmeans_split}
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts",
+        show_column_dend = FALSE,
+        show_column_names = FALSE,
+        top_annotation = top.anno,
+        row_km = 3)
+```
+
+### Split on metadata
+
+We can add a column split on the sub-cluster as well.
+
+```{r categorical_split}
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts",
+        show_column_dend = FALSE,
+        show_column_names = FALSE,
+        top_annotation = top.anno,
+        row_km = 3,
+        column_split = sc.data$subcluster)
+```
+
+There are now so many legends and splits that we need to do make some adjustments so that everything is readable.
+
+```{r legends}
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts",
+        show_column_dend = FALSE,
+        show_column_names = FALSE,
+        top_annotation = top.anno,
+        row_km = 3,
+        column_split = sc.data$subcluster)
+```
+
+## Overriding default row and column ordering
+
+The row and column order of the matrix can be set manually, as well.
+
+```{r row_order}
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts",
+        show_column_dend = FALSE,
+        show_column_names = FALSE,
+        top_annotation = top.anno,
+        row_order = sort(colnames(sc.data)[5:18]),
+        column_split = sc.data$subcluster)
+```
+
+## ... And so much more
+
+ComplexHeatmap, is, as the name suggests a complex package with many, many options to explore. If you don't see the modification you're looking for here, take a look at the [documentation](https://jokergoo.github.io/ComplexHeatmap-reference/book/).
 
 # Dendrogram
 
+Dendrograms diagram similarity. They may appear on the axes of heatmaps and other visualizations (as we saw above), or on their own.
+
+# TSS enrichment
+
+A TSS enrichment plot is a very simple line-based visualization showing the increase in coverage around the transcription start site in an ATAC-Seq or other chromatin accessibility assay.
+
 # Genomic coverage
+
+Coverage plots allow visualization of counts-based data (RNA transcripts, ChIP, etc) on a genomic coordinate system. Unlike the TSS enrichment plot above, results are typically not aggregated across a group of features of the same type, but instead displayed on unique genomic ranges. These plots are frequently annotated with a cartoon displaying features of interest and / or an ideogram showing the chromosomal structure.
 
 # Final thoughts
 
@@ -68,7 +185,8 @@ Here are a few things to think about as you choose how to present your work usin
 
 - **Consistency** Maintain the order of categorical values on axes across figures. Any time a color palette is re-used within a publication, poster, or presentation, it should map to the same values to avoid confusion.
 
-We hope this workshop has been helpful for you! Please email us at bioinformatics-training@ucdavis.edu or reach out on GitHub with any questions or comments about the course or course materials.
+We hope this workshop has been helpful for you! Please email us at bioinformatics-training@ucdavis.edu with any questions or comments about the course or course materials, and alert us to any issues on [GitHub](https://github.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/issues).
+
 ```{r sessionInfo}
 sessionInfo()
 ```
