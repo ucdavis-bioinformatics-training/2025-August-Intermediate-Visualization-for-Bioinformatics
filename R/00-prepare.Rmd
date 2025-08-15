@@ -76,6 +76,14 @@ if (!any(rownames(installed.packages()) == "ggplot2")){
 }
 ```
 
+## viridis
+
+```{r viridis}
+if (!any(rownames(installed.packages()) == "viridis")){
+  BiocManager::install("viridis")
+}
+```
+
 ## ggExtra
 
 ```{r ggExtra}
@@ -115,6 +123,23 @@ if (!any(rownames(installed.packages()) == "ggalluvial")){
 ```{r circlize}
 if (!any(rownames(installed.packages()) == "circlize")){
   BiocManager::install("circlize")
+}
+```
+
+## Signac
+
+```{r Signac}
+if (!any(rownames(installed.packages()) == "Signac")){
+  BiocManager::install("Signac")
+}
+```
+
+
+## Seurat
+
+```{r Seurat}
+if (!any(rownames(installed.packages()) == "Seurat")){
+  BiocManager::install("Seurat")
 }
 ```
 
