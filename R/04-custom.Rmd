@@ -155,6 +155,23 @@ Heatmap(matrix = sc.mat,
         column_split = sc.data$subcluster)
 ```
 
+Let's arrange the legends and labels to improve readability. We don't need a legend for the cluster identities, since the splits are labeled. To simplify, I am also going to remove the "celltype" annotation, which has many missing values.
+
+```{r}
+Heatmap(matrix = sc.mat,
+        name = "normalized\ncounts",
+        show_column_dend = FALSE,
+        show_column_names = FALSE,
+        top_annotation = HeatmapAnnotation("cluster" = sc.data$subcluster,
+                                           col = list("cluster" = cluster.colors),
+                                           na_col = "gray90",
+                                           show_legend = c("cluster" = FALSE)),
+        row_order = sort(colnames(sc.data)[5:18]),
+        column_split = sc.data$subcluster,
+        column_title_gp = gpar(fontsize = 8),
+        column_title_rot = 90)
+```
+
 ## ... And so much more
 
 ComplexHeatmap, is, as the name suggests a complex package with many, many options to explore. If you don't see the modification you're looking for here, take a look at the [documentation](https://jokergoo.github.io/ComplexHeatmap-reference/book/).
