@@ -34,6 +34,22 @@ if (!any(rownames(installed.packages()) == "Rmarkdown")){
 
 # Cleaning and managing data
 
+## lattice
+
+```{r lattice}
+if (!any(rownames(installed.packages()) == "dplyr")){
+  install.packages("lattice")
+}
+```
+
+## reshape2
+
+```{r reshape2}
+if (!any(rownames(installed.packages()) == "dplyr")){
+  install.packages("reshape2")
+}
+```
+
 ## dplyr
 
 ```{r dplyr}
