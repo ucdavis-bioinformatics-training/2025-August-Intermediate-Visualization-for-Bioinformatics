@@ -1,3 +1,5 @@
+#### BASE R GRAPHICS
+
 First let’s download some data to work with and take a look at it:
 
 ``` r
