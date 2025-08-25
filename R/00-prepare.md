@@ -15,8 +15,8 @@ if (!any(rownames(installed.packages()) == "BiocManager")){
 ## Rmarkdown
 
 ``` r
-if (!any(rownames(installed.packages()) == "Rmarkdown")){
-  BiocManager::install("Rmarkdown")
+if (!any(rownames(installed.packages()) == "rmarkdown")){
+  BiocManager::install("rmarkdown")
 }
 ```
 
