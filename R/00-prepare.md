@@ -174,5 +174,5 @@ if (!any(rownames(installed.packages()) == "ComplexHeatmap")){
 # Download markdown documentation
 
 ``` r
-download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/R/01-boxplot.Rmd")
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/01-boxplot.Rmd", "01-boxplot.Rmd")
 ```
