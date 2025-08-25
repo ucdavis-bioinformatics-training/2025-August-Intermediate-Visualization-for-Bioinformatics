@@ -1,0 +1,169 @@
+---
+title: 'Visualizations in R: Base R graphics'
+author: "UC Davis Bioinformatics Core"
+date: "`r Sys.Date()`"
+always_allow_html: true
+output:
+  md_document:
+    variant: gfm
+---
+
+# BASE R GRAPHICS
+
+First let's download some data to work with and take a look at it:
+```{r}
+counts = read.delim("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/raw_counts.txt", header=T)
+head(counts)
+```
+
+
+Let's start with a simple plot with axis labels:
+```{r}
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62")
+```
+
+
+Let's add a x=y line:
+```{r}
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62")
+abline(0,1)
+```
+
+
+Change the plotting character:
+```{r}
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23)
+abline(0,1)
+```
+
+
+Create your own axes:
+```{r}
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23, axes=F)
+axis(1, at=seq(0,80000,by=10000))
+axis(2, at=seq(0,100000,by=10000))
+```
+
+
+Add color to various things:
+```{r}
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23, axes=F, col="red")
+axis(1, at=seq(0,80000,by=10000), col="blue", col.ticks="orange", col.axis="green")
+axis(2, at=seq(0,100000,by=10000), col="blue", col.ticks="orange", col.axis="green")
+```
+
+
+
+Specify the ticks in a different way:
+```{r}
+# xaxp=c(start,end,number of intervals)
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", 
+     xaxp=c(0,80000,4), 
+     yaxp=c(0,100000,4))
+```
+
+
+
+Now, a simple boxplot:
+```{r}
+boxplot(counts)
+```
+
+
+Let's create a smaller dataset to work with, add some factor data, and then use the melt function to change the shape of our data:
+```{r}
+library(reshape2)
+tc = as.data.frame(t(counts))
+regions = c(rep("region1",6), rep("region2",6), rep("region3",6), rep("region4",6))
+tc2 = tc[,1:6]
+tc2$regions = regions
+tcm = melt(tc2)
+head(tcm)
+```
+
+
+Now create a boxplot with colors and with the data separated by region:
+```{r}
+cols <- c("red", "blue", "orange", "green")
+boxplot(value ~ regions, data=tcm, col = cols, xlab="GeneIDs", ylab="Counts")
+```
+
+
+Something a little more complicated. Boxplots of regions vs. values, but separated by variable (GeneIDs):
+```{r}
+boxplot(value ~ regions + variable, data=tcm, col = cols, xaxt="n", yaxt="n", xlab="GeneIDs", ylab="Counts")
+# use the par function to get the dimensions of the plot
+xlen = par("usr")[2]
+axis(side=1, labels=colnames(tc2)[1:6], at=seq(2,xlen-2,length.out=6), cex.axis=0.7)
+axis(side=2, las=2)
+# add a legend
+legend("topleft", fill=cols, legend=unique(regions))
+```
+
+
+Boxplot for a single gene, separated by regions:
+```{r}
+tc3 = data.frame(AT1G01010=tc$AT1G01010, regions=regions)
+rownames(tc3) = rownames(tc)
+boxplot(AT1G01010 ~ regions, data=tc3)
+```
+
+
+xyplot (bivariate scatterplot) of count data, separated by GeneID:
+```{r}
+library(lattice)
+xyplot(value ~ variable, data=tcm, scales=list(rot=90), xlab="GeneIDs", ylab="Counts")
+```
+
+
+Same xyplot, but also separated by regions:
+```{r}
+xyplot(value ~ variable | regions, data=tcm, scales=list(rot=90), xlab="GeneIDs", ylab="Counts")
+```
+
+
+Same xyplot but with both GeneIDs and regions:
+```{r}
+xyplot(value ~ variable + regions, data=tcm, scales=list(rot=90), xlab="GeneIDs", ylab="Counts")
+```
+
+
+Boxplot for each GeneID in one plot:
+```{r}
+boxplot(value ~ variable, data = tcm, las=2, ylab="Counts", xlab="")
+```
+
+
+Now, the same boxplot but separating by GeneIDs and regions together:
+```{r}
+# need to change the margins of the plot to fit the labels
+par(mar = c(10, 5, 2, 0))
+boxplot(value ~ variable * regions, data = tcm, las=2, ylab="Counts", xlab="")
+# use mtext to create an x-axis label above the graph
+mtext("GeneID:Region", side = 3, line = 1)
+```
+
+
+Simple histogram:
+```{r}
+hist(counts[,"C61"], xlab="Counts")
+```
+
+
+Refine the histogram:
+```{r}
+hist(counts[,"C61"], xlab="Counts", breaks=1000, xlim=c(0,3000))
+```
+
+
+## VISUALIZATION CHALLENGE
+
+Download the gapminder dataset to your Rstudio session using the following URL:
+
+https://github.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/raw/main/R/gapminder.csv
+
+Take a look at the dataset. Subset the data to only look at rows from 1982. Then make a scatterplot of gdp vs life exp (using the plot function) of the subset, adding x and y labels. Find out how to log scale the x axis from the "plot.default" documentation.
+
+Next, make a named vector of colors with the names being the continents. Use the vector to add colors to each point based on the continent for that point. You may need to look at the "col" section in the "plot.default" documentation. You can also use the "colors()" function to get a list of all of the available colors. Add a legend to the plot showing which colors correspond to which continent.
+
+Finally, create a function that takes in a numeric vector and a minimum and maximum circle size. Within the function, take the square root of the vector, then use the min-max normalization method to normalize each element of the vector. Once you have normalized data, use those values to scale between the minimum and maximum circle size. Use this function to change the size of the circles to correspond to the population of the country using the "cex" parameter for the scatter plot.
