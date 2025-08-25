@@ -25,7 +25,7 @@ if (!any(rownames(installed.packages()) == "rmarkdown")){
 ## lattice
 
 ``` r
-if (!any(rownames(installed.packages()) == "dplyr")){
+if (!any(rownames(installed.packages()) == "lattice")){
   install.packages("lattice")
 }
 ```
@@ -33,7 +33,7 @@ if (!any(rownames(installed.packages()) == "dplyr")){
 ## reshape2
 
 ``` r
-if (!any(rownames(installed.packages()) == "dplyr")){
+if (!any(rownames(installed.packages()) == "reshape2")){
   install.packages("reshape2")
 }
 ```
@@ -158,7 +158,7 @@ if (!any(rownames(installed.packages()) == "ggtree")){
 
 ``` r
 if (!any(rownames(installed.packages()) == "ggcoverage")){
-  install.package("remotes")
+  install.packages("remotes")
   remotes::install_github("showteeth/ggcoverage")
 }
 ```
