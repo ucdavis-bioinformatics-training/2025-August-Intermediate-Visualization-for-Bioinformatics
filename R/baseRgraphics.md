@@ -1,5 +1,11 @@
 # BASE R GRAPHICS
 
+Download and open the Rmd file for this section:
+
+``` r
+download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/baseRgraphics.Rmd", "baseRgrapics.Rmd")
+```
+
 First let’s download some data to work with and take a look at it:
 
 ``` r
@@ -28,7 +34,7 @@ Let’s start with a simple plot with axis labels:
 plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62")
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 Let’s add a x=y line:
 
@@ -37,16 +43,16 @@ plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62")
 abline(0,1)
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 Change the plotting character:
 
 ``` r
-plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23)
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23, col="red")
 abline(0,1)
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 Create your own axes:
 
@@ -56,17 +62,17 @@ axis(1, at=seq(0,80000,by=10000))
 axis(2, at=seq(0,100000,by=10000))
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-Add color to various things:
+Add color to various things and change axis line widths:
 
 ``` r
 plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23, axes=F, col="red")
-axis(1, at=seq(0,80000,by=10000), col="blue", col.ticks="orange", col.axis="green")
-axis(2, at=seq(0,100000,by=10000), col="blue", col.ticks="orange", col.axis="green")
+axis(1, at=seq(0,80000,by=10000), col="blue", col.ticks="orange", col.axis="green", lwd=5)
+axis(2, at=seq(0,100000,by=10000), col="blue", col.ticks="orange", col.axis="green", lwd=5)
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 Specify the ticks in a different way:
 
@@ -77,7 +83,7 @@ plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62",
      yaxp=c(0,100000,4))
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 Now, a simple boxplot:
 
@@ -85,7 +91,7 @@ Now, a simple boxplot:
 boxplot(counts)
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 Let’s create a smaller dataset to work with, add some factor data, and
 then use the melt function to change the shape of our data:
@@ -120,7 +126,21 @@ cols <- c("red", "blue", "orange", "green")
 boxplot(value ~ regions, data=tcm, col = cols, xlab="GeneIDs", ylab="Counts")
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+We can also add the points to the boxplot:
+
+``` r
+cols <- c("red", "blue", "orange", "green")
+boxplot(value ~ regions, data=tcm, col = cols, xlab="GeneIDs", ylab="Counts")
+stripchart(value ~ regions, data=tcm,
+           vertical=TRUE, 
+           method="jitter", 
+           pch=19,
+           add=TRUE)
+```
+
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 Something a little more complicated. Boxplots of regions vs. values, but
 separated by variable (GeneIDs):
@@ -129,13 +149,14 @@ separated by variable (GeneIDs):
 boxplot(value ~ regions + variable, data=tcm, col = cols, xaxt="n", yaxt="n", xlab="GeneIDs", ylab="Counts")
 # use the par function to get the dimensions of the plot
 xlen = par("usr")[2]
+
 axis(side=1, labels=colnames(tc2)[1:6], at=seq(2,xlen-2,length.out=6), cex.axis=0.7)
 axis(side=2, las=2)
 # add a legend
 legend("topleft", fill=cols, legend=unique(regions))
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 Boxplot for a single gene, separated by regions:
 
@@ -145,7 +166,7 @@ rownames(tc3) = rownames(tc)
 boxplot(AT1G01010 ~ regions, data=tc3)
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 xyplot (bivariate scatterplot) of count data, separated by GeneID:
 
@@ -154,7 +175,7 @@ library(lattice)
 xyplot(value ~ variable, data=tcm, scales=list(rot=90), xlab="GeneIDs", ylab="Counts")
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 Same xyplot, but also separated by regions:
 
@@ -162,7 +183,7 @@ Same xyplot, but also separated by regions:
 xyplot(value ~ variable | regions, data=tcm, scales=list(rot=90), xlab="GeneIDs", ylab="Counts")
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 Same xyplot but with both GeneIDs and regions:
 
@@ -170,7 +191,7 @@ Same xyplot but with both GeneIDs and regions:
 xyplot(value ~ variable + regions, data=tcm, scales=list(rot=90), xlab="GeneIDs", ylab="Counts")
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 Boxplot for each GeneID in one plot:
 
@@ -178,7 +199,7 @@ Boxplot for each GeneID in one plot:
 boxplot(value ~ variable, data = tcm, las=2, ylab="Counts", xlab="")
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 Now, the same boxplot but separating by GeneIDs and regions together:
 
@@ -190,7 +211,7 @@ boxplot(value ~ variable * regions, data = tcm, las=2, ylab="Counts", xlab="")
 mtext("GeneID:Region", side = 3, line = 1)
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 Simple histogram:
 
@@ -198,7 +219,7 @@ Simple histogram:
 hist(counts[,"C61"], xlab="Counts")
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 Refine the histogram:
 
@@ -206,14 +227,14 @@ Refine the histogram:
 hist(counts[,"C61"], xlab="Counts", breaks=1000, xlim=c(0,3000))
 ```
 
-![](baseRgraphics_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](baseRgraphics_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ## VISUALIZATION CHALLENGE
 
 Download the gapminder dataset to your Rstudio session using the
 following URL:
 
-<https://github.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/raw/main/R/gapminder.csv>
+<https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/gapminder.csv>
 
 Take a look at the dataset. Subset the data to only look at rows from
 1982. Then make a scatterplot of gdp vs life exp (using the plot

@@ -10,18 +10,11 @@ output:
 
 # BASE R GRAPHICS
 
-Download and open the Rmd file for this section:
-
-```{r}
-download.file("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/baseRgraphics.Rmd", "baseRgrapics.Rmd")
-```
-
 First let's download some data to work with and take a look at it:
 ```{r}
 counts = read.delim("https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/raw_counts.txt", header=T)
 head(counts)
 ```
-
 
 
 Let's start with a simple plot with axis labels:
@@ -39,7 +32,7 @@ abline(0,1)
 
 Change the plotting character:
 ```{r}
-plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23, col="red")
+plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23)
 abline(0,1)
 ```
 
@@ -52,11 +45,11 @@ axis(2, at=seq(0,100000,by=10000))
 ```
 
 
-Add color to various things and change axis line widths:
+Add color to various things:
 ```{r}
 plot(counts[,"C61"], counts[,"C62"], xlab="C61", ylab="C62", pch=23, axes=F, col="red")
-axis(1, at=seq(0,80000,by=10000), col="blue", col.ticks="orange", col.axis="green", lwd=5)
-axis(2, at=seq(0,100000,by=10000), col="blue", col.ticks="orange", col.axis="green", lwd=5)
+axis(1, at=seq(0,80000,by=10000), col="blue", col.ticks="orange", col.axis="green")
+axis(2, at=seq(0,100000,by=10000), col="blue", col.ticks="orange", col.axis="green")
 ```
 
 
@@ -96,27 +89,11 @@ boxplot(value ~ regions, data=tcm, col = cols, xlab="GeneIDs", ylab="Counts")
 ```
 
 
-We can also add the points to the boxplot:
-
-```{r}
-cols <- c("red", "blue", "orange", "green")
-boxplot(value ~ regions, data=tcm, col = cols, xlab="GeneIDs", ylab="Counts")
-stripchart(value ~ regions, data=tcm,
-           vertical=TRUE, 
-           method="jitter", 
-           pch=19,
-           add=TRUE)
-```
-
-
-
-
 Something a little more complicated. Boxplots of regions vs. values, but separated by variable (GeneIDs):
 ```{r}
 boxplot(value ~ regions + variable, data=tcm, col = cols, xaxt="n", yaxt="n", xlab="GeneIDs", ylab="Counts")
 # use the par function to get the dimensions of the plot
 xlen = par("usr")[2]
-
 axis(side=1, labels=colnames(tc2)[1:6], at=seq(2,xlen-2,length.out=6), cex.axis=0.7)
 axis(side=2, las=2)
 # add a legend
@@ -183,7 +160,7 @@ hist(counts[,"C61"], xlab="Counts", breaks=1000, xlim=c(0,3000))
 
 Download the gapminder dataset to your Rstudio session using the following URL:
 
-https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/gapminder.csv
+https://github.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/raw/main/R/gapminder.csv
 
 Take a look at the dataset. Subset the data to only look at rows from 1982. Then make a scatterplot of gdp vs life exp (using the plot function) of the subset, adding x and y labels. Find out how to log scale the x axis from the "plot.default" documentation.
 
