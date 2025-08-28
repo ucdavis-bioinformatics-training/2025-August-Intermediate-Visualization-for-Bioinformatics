@@ -237,7 +237,7 @@ following URL:
 <https://raw.githubusercontent.com/ucdavis-bioinformatics-training/2025-August-Intermediate-Visualization-for-Bioinformatics/refs/heads/master/R/gapminder.csv>
 
 Take a look at the dataset. Subset the data to only look at rows from
-1982. Then make a scatterplot of gdp vs life exp (using the plot
+1982 . Then make a scatterplot of gdp vs life exp (using the plot
 function) of the subset, adding x and y labels. Find out how to log
 scale the x axis from the “plot.default” documentation.
 
