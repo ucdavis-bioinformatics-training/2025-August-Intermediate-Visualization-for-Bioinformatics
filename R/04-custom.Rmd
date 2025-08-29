@@ -45,8 +45,16 @@ We will be making use of a few different data sets in this section: one for each
 # scRNA for heat map
 sc.data <- read.csv("sc_data.csv")
 # dendrogram data
+download.file("https://raw.githubusercontent.com/GuangchuangYu/ggtree-current-protocols/refs/heads/master/mskcc.txt", "mskcc.txt")
+tree.data <- read.delim("mskcc.txt", row.names = 1)
 # ATAC-seq for TSS enrichment
 # genomic coverage data
+track.df <- LoadTrackFile(track.folder = system.file("extdata", "RNA-seq", package = "ggcoverage"),
+              format = "bw",
+              region = "chr14:21,677,306-21,737,601",
+              extend = 2000,
+              meta.info = read.csv(system.file("extdata", "RNA-seq", "meta_info.csv", package = "ggcoverage")))
+gtf <- rtracklayer::import.gff(con = system.file("extdata", "used_hg19.gtf", package = "ggcoverage"), format = "gtf")
 ```
 
 # Heat map
@@ -129,18 +137,6 @@ Heatmap(matrix = sc.mat,
         column_split = sc.data$subcluster)
 ```
 
-There are now so many legends and splits that we need to do make some adjustments so that everything is readable.
-
-```{r legends}
-Heatmap(matrix = sc.mat,
-        name = "normalized\ncounts",
-        show_column_dend = FALSE,
-        show_column_names = FALSE,
-        top_annotation = top.anno,
-        row_km = 3,
-        column_split = sc.data$subcluster)
-```
-
 ## Overriding default row and column ordering
 
 The row and column order of the matrix can be set manually, as well.
@@ -180,6 +176,28 @@ ComplexHeatmap, is, as the name suggests a complex package with many, many optio
 
 Dendrograms diagram similarity. They may appear on the axes of heatmaps and other visualizations (as we saw above), or on their own.
 
+```{r distance_matrix}
+tree.distance <- as.dist(1 - cor(tree.data, method = "pearson"))
+tree.clusters <- hclust(tree.distance, method = "ward.D")
+```
+
+```{r basic_dendrogram}
+p <- ggtree(tree.clusters) +
+  layout_dendrogram() +
+  geom_tiplab(hjust = 1) +
+  theme_dendrogram()
+p
+```
+
+
+```{r cutree}
+clusters <- cutree(tree.clusters, k = 2)
+groupOTU(p, split(names(clusters), clusters), group_name = "Cluster") +
+  aes(color = Cluster) +
+  scale_color_manual(breaks = c(1, 2), values = c("goldenrod2", "deepskyblue3"))
+```
+
+
 # TSS enrichment
 
 A TSS enrichment plot is a very simple line-based visualization showing the increase in coverage around the transcription start site in an ATAC-Seq or other chromatin accessibility assay.
@@ -187,6 +205,29 @@ A TSS enrichment plot is a very simple line-based visualization showing the incr
 # Genomic coverage
 
 Coverage plots allow visualization of counts-based data (RNA transcripts, ChIP, etc) on a genomic coordinate system. Unlike the TSS enrichment plot above, results are typically not aggregated across a group of features of the same type, but instead displayed on unique genomic ranges. These plots are frequently annotated with a cartoon displaying features of interest and / or an ideogram showing the chromosomal structure.
+
+```{r basic_coverage}
+ggcoverage(data = track.df, plot.type = "joint", facet.key = "Type", group.key = "Type")
+```
+
+```{r mark_region}
+region <- data.frame(start = c(21678900, 21732001, 21737590),
+                     end = c(21679900, 21732400, 21737650),
+                     label = c("M1", "M2", "M3"))
+ggcoverage(data = track.df, plot.type = "joint", facet.key = "Type", group.key = "Type", mark.region = region, range.position = "out")
+```
+```{r}
+ggcoverage(data = track.df, plot.type = "joint", facet.key = "Type", group.key = "Type", mark.region = region, range.position = "out") +
+  geom_gene(gtf.gr = gtf)
+```
+```{r}
+ggcoverage(data = track.df, plot.type = "facet", facet.key = "Type", group.key = "Type", mark.region = region, range.position = "out") +
+  geom_gene(gtf.gr = gtf)
+```
+```{r}
+ggcoverage(data = track.df, plot.type = "facet", facet.key = "Type", group.key = "Type", mark.region = region, range.position = "out", facet.y.scale = "fixed") +
+  geom_gene(gtf.gr = gtf)
+```
 
 # Final thoughts
 

@@ -251,7 +251,7 @@ p
 
 By default, plot area is controlled by the size of the graphics device (e.g. html document or PDF) to which the plot is printed. The aspect ratio will change to fit the available space, and can be altered by things like the size of the legend. This behavior means that the same plot saved to a US Letter sized PDF with and without the legend (or with different length text in the legend) may have a very different appearance, skewing perception of the data. To avoid this pitfall, we can set an aspect ratio with `coord_fixed()` ensuring that the relationship of points to one another will remain unchanged no matter the dimension of the graphics device.
 
-```{r aspect_ratio}
+```{r aspect_ratio, fig.height=10}
 p <- p + coord_fixed(ratio = 1)
 p
 ```
@@ -312,13 +312,17 @@ As mentioned above, shape can be very useful when mapping a categorical value to
 
 
 ```{r mds_shape}
-q <- ggplot(data = mds, mapping = aes(x = x, y = y, color = genotype, shape = cell_type)) +
+mds
+q <- ggplot(data = mds, mapping = aes(x = x,
+                                      y = y,
+                                      color = genotype,
+                                      shape = cell_type)) +
   geom_point(size = 3) +
   labs(x = "Leading logFC dim 1", y = "Leading logFC dim 2", color = "Genotype", shape = "Cell type") +
   scale_color_viridis_d() +
   coord_fixed() +
   theme_bw()
-q
+q + scale_shape_manual(values = c(15, 17))
 ```
 
 # Using point size
@@ -361,6 +365,17 @@ kegg %>%
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         axis.title.x = element_blank())
+```
+
+
+**CHALLENGE**
+
+Use point size in a scatter plot demonstrating the relationship between weight, cyl, and mpg in the mtcars data set. Consider using other aesthetics to add further information (e.g. gear, hp, or manufacturer).
+
+```{r}
+mtcars %>%
+  kable() %>%
+  kable_styling("striped")
 ```
 
 # Addressing over-plotting
